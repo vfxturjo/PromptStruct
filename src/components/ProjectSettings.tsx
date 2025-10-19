@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useEditorStore } from '@/stores/editorStore';
 import { NotificationService } from '@/services/notificationService';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Plus, X, Settings, Save } from 'lucide-react';
 
 interface ProjectSettingsProps {
     isOpen: boolean;
@@ -73,162 +83,161 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
     if (!isOpen || !currentProject) return null;
 
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-            <div style={{ background: 'white', borderRadius: '4px', width: '100%', maxWidth: '768px', maxHeight: '90vh', overflowY: 'auto' }}>
-                <div style={{ padding: '16px', borderBottom: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        ⚙️ Project Settings
-                    </h3>
-                    <button onClick={onClose} style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                        ×
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        Project Settings
+                    </DialogTitle>
+                </DialogHeader>
 
-                <div style={{ padding: '24px' }}>
+                <div className="space-y-6 py-4">
                     {/* Basic Information */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Basic Information</h4>
+                    <div className="space-y-4">
+                        <h4 className="text-lg font-semibold">Basic Information</h4>
 
-                        <div style={{ marginBottom: '16px' }}>
-                            <label htmlFor="project-name" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Project Name</label>
-                            <input
+                        <div className="space-y-2">
+                            <Label htmlFor="project-name">Project Name</Label>
+                            <Input
                                 id="project-name"
                                 type="text"
                                 value={projectName}
                                 onChange={(e) => setProjectName(e.target.value)}
                                 placeholder="Enter project name"
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                             />
                         </div>
 
-                        <div style={{ marginBottom: '16px' }}>
-                            <label htmlFor="project-description" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Description</label>
-                            <textarea
+                        <div className="space-y-2">
+                            <Label htmlFor="project-description">Description</Label>
+                            <Textarea
                                 id="project-description"
                                 value={projectDescription}
                                 onChange={(e) => setProjectDescription(e.target.value)}
                                 placeholder="Describe what this project is about..."
                                 rows={3}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', resize: 'vertical' }}
+                                className="resize-y"
                             />
                         </div>
 
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Tags</label>
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                <input
+                        <div className="space-y-2">
+                            <Label>Tags</Label>
+                            <div className="flex gap-2 mb-2">
+                                <Input
                                     type="text"
                                     value={newTag}
                                     onChange={(e) => setNewTag(e.target.value)}
                                     onKeyPress={handleKeyPress}
                                     placeholder="Add a tag"
-                                    style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                                    className="flex-1"
                                 />
-                                <button onClick={handleAddTag} style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                                    ➕
-                                </button>
+                                <Button onClick={handleAddTag} size="sm">
+                                    <Plus className="w-4 h-4" />
+                                </Button>
                             </div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            <div className="flex flex-wrap gap-2">
                                 {projectTags.map((tag) => (
-                                    <span key={tag} style={{ background: '#f0f0f0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                                         {tag}
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => handleRemoveTag(tag)}
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                                            className="h-auto p-0 ml-1"
                                         >
-                                            ×
-                                        </button>
-                                    </span>
+                                            <X className="w-3 h-3" />
+                                        </Button>
+                                    </Badge>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    <hr style={{ border: 'none', borderTop: '1px solid #ccc', margin: '24px 0' }} />
+                    <Separator />
 
                     {/* Default Template */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Default Prompt Template</h4>
-                        <div>
-                            <label htmlFor="default-template" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Template Content</label>
-                            <textarea
+                    <div className="space-y-4">
+                        <h4 className="text-lg font-semibold">Default Prompt Template</h4>
+                        <div className="space-y-2">
+                            <Label htmlFor="default-template">Template Content</Label>
+                            <Textarea
                                 id="default-template"
                                 value={defaultPromptTemplate}
                                 onChange={(e) => setDefaultPromptTemplate(e.target.value)}
                                 placeholder="Enter default template for new prompts..."
                                 rows={4}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', resize: 'vertical' }}
+                                className="resize-y"
                             />
-                            <p style={{ margin: '4px 0 0 0', color: '#666', fontSize: '12px' }}>
+                            <p className="text-xs text-muted-foreground">
                                 This template will be used when creating new prompts in this project.
                             </p>
                         </div>
                     </div>
 
-                    <hr style={{ border: 'none', borderTop: '1px solid #ccc', margin: '24px 0' }} />
+                    <Separator />
 
                     {/* Settings */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold' }}>Project Settings</h4>
+                    <div className="space-y-4">
+                        <h4 className="text-lg font-semibold">Project Settings</h4>
 
-                        <div style={{ marginBottom: '16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500' }}>Auto-save</label>
-                                    <p style={{ margin: '4px 0 0 0', color: '#666', fontSize: '12px' }}>
+                                    <Label>Auto-save</Label>
+                                    <p className="text-sm text-muted-foreground">
                                         Automatically save changes to prompts
                                     </p>
                                 </div>
-                                <input
-                                    type="checkbox"
+                                <Switch
                                     checked={autoSaveEnabled}
-                                    onChange={(e) => setAutoSaveEnabled(e.target.checked)}
-                                    style={{ transform: 'scale(1.2)' }}
+                                    onCheckedChange={setAutoSaveEnabled}
                                 />
                             </div>
 
                             {autoSaveEnabled && (
-                                <div style={{ marginTop: '16px' }}>
-                                    <label htmlFor="auto-save-interval" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Auto-save Interval (seconds)</label>
-                                    <input
+                                <div className="space-y-2">
+                                    <Label htmlFor="auto-save-interval">Auto-save Interval (seconds)</Label>
+                                    <Input
                                         id="auto-save-interval"
                                         type="number"
                                         min="10"
                                         max="300"
                                         value={autoSaveInterval}
                                         onChange={(e) => setAutoSaveInterval(Number(e.target.value))}
-                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                     />
                                 </div>
                             )}
                         </div>
 
-                        <div>
-                            <label htmlFor="export-format" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Default Export Format</label>
-                            <select
-                                id="export-format"
+                        <div className="space-y-2">
+                            <Label htmlFor="export-format">Default Export Format</Label>
+                            <Select
                                 value={exportFormat}
-                                onChange={(e) => setExportFormat(e.target.value as 'json' | 'markdown' | 'txt')}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
+                                onValueChange={(value) => setExportFormat(value as 'json' | 'markdown' | 'txt')}
                             >
-                                <option value="json">JSON</option>
-                                <option value="markdown">Markdown</option>
-                                <option value="txt">Plain Text</option>
-                            </select>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="json">JSON</SelectItem>
+                                    <SelectItem value="markdown">Markdown</SelectItem>
+                                    <SelectItem value="txt">Plain Text</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
-
-                    {/* Actions */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px' }}>
-                        <button onClick={onClose} style={{ padding: '12px 24px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                            Cancel
-                        </button>
-                        <button onClick={handleSave} style={{ padding: '12px 24px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                            💾 Save Settings
-                        </button>
-                    </div>
                 </div>
-            </div>
-        </div>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSave}>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Settings
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

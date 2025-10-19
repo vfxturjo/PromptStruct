@@ -1,4 +1,14 @@
 import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { FileText, Download, Trash2, Star, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ProjectTemplate {
     id: string;
@@ -270,219 +280,188 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
         URL.revokeObjectURL(url);
     };
 
-    const handleImportTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const template: ProjectTemplate = JSON.parse(e.target?.result as string);
-                template.id = `template_${Date.now()}`;
-                template.isBuiltIn = false;
-                template.createdAt = new Date().toISOString();
-                template.usageCount = 0;
-
-                const newTemplates = [...templates, template];
-                setTemplates(newTemplates);
-
-                const customTemplates = newTemplates.filter(t => !t.isBuiltIn);
-                localStorage.setItem('gemini-project-templates', JSON.stringify(customTemplates));
-            } catch (error) {
-                console.error('Failed to import template:', error);
-            }
-        };
-        reader.readAsText(file);
-    };
-
     if (!isOpen) return null;
 
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-            <div style={{ background: 'white', borderRadius: '4px', width: '100%', maxWidth: '1536px', maxHeight: '90vh', overflowY: 'auto' }}>
-                <div style={{ padding: '16px', borderBottom: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        📋 Project Templates
-                    </h3>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <input
-                            type="file"
-                            accept=".json"
-                            onChange={handleImportTemplate}
-                            style={{ display: 'none' }}
-                            id="import-template"
-                        />
-                        <label htmlFor="import-template" style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                            📤 Import
-                        </label>
-                        <button onClick={() => setShowCreateForm(true)} style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                            ➕ Create Template
-                        </button>
-                        <button onClick={onClose} style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                            ×
-                        </button>
-                    </div>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <FileText className="w-5 h-5" />
+                        Project Templates
+                    </DialogTitle>
+                </DialogHeader>
 
-                <div style={{ padding: '24px' }}>
+                <div className="space-y-6 py-4">
                     {/* Search and Filters */}
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-                        <div style={{ flex: 1 }}>
-                            <input
+                    <div className="flex gap-4">
+                        <div className="flex-1">
+                            <Input
                                 type="text"
                                 placeholder="Search templates..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                             />
                         </div>
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
-                        >
-                            {categories.map(category => (
-                                <option key={category} value={category}>
-                                    {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
-                                </option>
-                            ))}
-                        </select>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="w-48">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categories.map(category => (
+                                    <SelectItem key={category} value={category}>
+                                        {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Create Template Form */}
-                    {showCreateForm && (
-                        <div style={{ border: '1px solid #ccc', borderRadius: '4px', marginBottom: '24px' }}>
-                            <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
-                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Create New Template</h4>
-                            </div>
-                            <div style={{ padding: '16px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                                    <div>
-                                        <label htmlFor="template-name" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Template Name</label>
-                                        <input
-                                            id="template-name"
-                                            type="text"
-                                            value={newTemplate.name || ''}
-                                            onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
-                                            placeholder="Enter template name"
-                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    <Collapsible open={showCreateForm} onOpenChange={setShowCreateForm}>
+                        <CollapsibleTrigger asChild>
+                            <Button variant="outline" className="w-full">
+                                {showCreateForm ? <ChevronUp className="w-4 h-4 mr-2" /> : <ChevronDown className="w-4 h-4 mr-2" />}
+                                {showCreateForm ? 'Hide Create Form' : 'Create New Template'}
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-4">
+                            <Card>
+                                <CardHeader>
+                                    <h4 className="text-lg font-semibold">Create New Template</h4>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="template-name">Template Name</Label>
+                                            <Input
+                                                id="template-name"
+                                                type="text"
+                                                value={newTemplate.name || ''}
+                                                onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                                                placeholder="Enter template name"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="template-category">Category</Label>
+                                            <Select
+                                                value={newTemplate.category || 'general'}
+                                                onValueChange={(value) => setNewTemplate(prev => ({ ...prev, category: value }))}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="general">General</SelectItem>
+                                                    <SelectItem value="writing">Writing</SelectItem>
+                                                    <SelectItem value="business">Business</SelectItem>
+                                                    <SelectItem value="development">Development</SelectItem>
+                                                    <SelectItem value="education">Education</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="template-description">Description</Label>
+                                        <Textarea
+                                            id="template-description"
+                                            value={newTemplate.description || ''}
+                                            onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
+                                            placeholder="Describe what this template is for..."
+                                            rows={3}
                                         />
                                     </div>
-                                    <div>
-                                        <label htmlFor="template-category" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Category</label>
-                                        <select
-                                            id="template-category"
-                                            value={newTemplate.category || 'general'}
-                                            onChange={(e) => setNewTemplate(prev => ({ ...prev, category: e.target.value }))}
-                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
-                                        >
-                                            <option value="general">General</option>
-                                            <option value="writing">Writing</option>
-                                            <option value="business">Business</option>
-                                            <option value="development">Development</option>
-                                            <option value="education">Education</option>
-                                        </select>
+                                    <div className="flex justify-end gap-2">
+                                        <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button onClick={handleCreateTemplate}>
+                                            Create Template
+                                        </Button>
                                     </div>
-                                </div>
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label htmlFor="template-description" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Description</label>
-                                    <textarea
-                                        id="template-description"
-                                        value={newTemplate.description || ''}
-                                        onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
-                                        placeholder="Describe what this template is for..."
-                                        rows={3}
-                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', resize: 'vertical' }}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                    <button onClick={() => setShowCreateForm(false)} style={{ padding: '12px 24px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                                        Cancel
-                                    </button>
-                                    <button onClick={handleCreateTemplate} style={{ padding: '12px 24px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                                        Create Template
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                                </CardContent>
+                            </Card>
+                        </CollapsibleContent>
+                    </Collapsible>
 
                     {/* Templates Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredTemplates.map(template => (
-                            <div key={template.id} style={{ border: '1px solid #ccc', borderRadius: '4px', position: 'relative' }}>
-                                <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Card key={template.id} className="relative">
+                                <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <h4 className="text-lg font-semibold flex items-center gap-2">
                                                 {template.name}
                                                 {template.isBuiltIn && (
-                                                    <span style={{ fontSize: '12px', color: '#ffc107' }}>⭐</span>
+                                                    <Star className="w-4 h-4 text-yellow-500" />
                                                 )}
                                             </h4>
-                                            <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '14px' }}>
+                                            <p className="text-sm text-muted-foreground mt-1">
                                                 {template.description}
                                             </p>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
-                                        <span style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                        <Badge variant="secondary" className="text-xs">
                                             {template.category}
-                                        </span>
+                                        </Badge>
                                         {template.tags.slice(0, 2).map(tag => (
-                                            <span key={tag} style={{ background: '#e0e0e0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
+                                            <Badge key={tag} variant="outline" className="text-xs">
                                                 {tag}
-                                            </span>
+                                            </Badge>
                                         ))}
                                         {template.tags.length > 2 && (
-                                            <span style={{ background: '#e0e0e0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
+                                            <Badge variant="outline" className="text-xs">
                                                 +{template.tags.length - 2}
-                                            </span>
+                                            </Badge>
                                         )}
                                     </div>
-                                </div>
-                                <div style={{ padding: '16px' }}>
-                                    <div style={{ marginBottom: '12px' }}>
-                                        <div style={{ fontSize: '12px', color: '#666' }}>
-                                            <div>Prompts: {template.prompts.length}</div>
-                                            <div>Used: {template.usageCount} times</div>
-                                        </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-xs text-muted-foreground space-y-1">
+                                        <div>Prompts: {template.prompts.length}</div>
+                                        <div>Used: {template.usageCount} times</div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
-                                            onClick={() => onCreateFromTemplate(template)}
-                                            style={{ flex: 1, padding: '8px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}
+                                </CardContent>
+                                <CardFooter className="flex gap-2">
+                                    <Button
+                                        onClick={() => onCreateFromTemplate(template)}
+                                        className="flex-1"
+                                    >
+                                        <FileText className="w-4 h-4 mr-2" />
+                                        Use Template
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleExportTemplate(template)}
+                                    >
+                                        <Download className="w-4 h-4" />
+                                    </Button>
+                                    {!template.isBuiltIn && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleDeleteTemplate(template.id)}
                                         >
-                                            📋 Use Template
-                                        </button>
-                                        <button
-                                            onClick={() => handleExportTemplate(template)}
-                                            style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
-                                        >
-                                            📥
-                                        </button>
-                                        {!template.isBuiltIn && (
-                                            <button
-                                                onClick={() => handleDeleteTemplate(template.id)}
-                                                style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
-                                            >
-                                                🗑️
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    )}
+                                </CardFooter>
+                            </Card>
                         ))}
                     </div>
 
                     {filteredTemplates.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
-                            <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
-                            <p style={{ margin: 0, fontSize: '14px' }}>No templates found matching your criteria.</p>
+                        <div className="text-center py-8">
+                            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                            <h3 className="text-lg font-semibold mb-2">No templates found</h3>
+                            <p className="text-muted-foreground">No templates match your search criteria.</p>
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }

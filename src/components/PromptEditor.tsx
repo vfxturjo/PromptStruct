@@ -1,3 +1,8 @@
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Kbd } from '@/components/ui/kbd';
+import { Lightbulb } from 'lucide-react';
+
 interface PromptEditorProps {
     value: string;
     onChange: (value: string) => void;
@@ -8,28 +13,18 @@ interface PromptEditorProps {
 export function PromptEditor({ value, onChange, placeholder, className }: PromptEditorProps) {
     return (
         <div className={className}>
-            <textarea
+            <Textarea
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                style={{
-                    width: '100%',
-                    minHeight: '400px',
-                    padding: '12px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    resize: 'none'
-                }}
+                className="min-h-[400px] font-mono text-sm resize-none"
             />
-            <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-                💡 Use <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{text:Name:Default}}'}</code>,
-                <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{select:Name:Option1|Option2}}'}</code>,
-                <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{slider:Name:50}}'}</code>, or
-                <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{toggle:Name}}...{{/toggle:Name}}'}</code> for dynamic controls
-            </div>
+            <Alert className="mt-1">
+                <Lightbulb className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                    Use <Kbd>{'{{text:Name:Default}}'}</Kbd>, <Kbd>{'{{select:Name:Option1|Option2}}'}</Kbd>, <Kbd>{'{{slider:Name:50}}'}</Kbd>, or <Kbd>{'{{toggle:Name}}...{{/toggle:Name}}'}</Kbd> for dynamic controls
+                </AlertDescription>
+            </Alert>
         </div>
     );
 }

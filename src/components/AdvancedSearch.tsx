@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Project, Prompt } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, Save, ChevronDown, ChevronUp, X, Calendar, Tag } from 'lucide-react';
 
 interface SearchFilters {
     query: string;
@@ -186,76 +196,80 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
     if (!isOpen) return null;
 
     return (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-            <div style={{ background: 'white', borderRadius: '4px', width: '100%', maxWidth: '1024px', maxHeight: '90vh', overflowY: 'auto' }}>
-                <div style={{ padding: '16px', borderBottom: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🔍 Advanced Search
-                    </h3>
-                    <button onClick={onClose} style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                        ×
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Search className="w-5 h-5" />
+                        Advanced Search
+                    </DialogTitle>
+                </DialogHeader>
 
-                <div style={{ padding: '24px' }}>
+                <div className="space-y-6 py-4">
                     {/* Search Query */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <div style={{ marginBottom: '16px' }}>
-                            <label htmlFor="search-query" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Search Query</label>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <input
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="search-query">Search Query</Label>
+                            <div className="flex gap-2">
+                                <Input
                                     id="search-query"
                                     type="text"
                                     value={filters.query}
                                     onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
                                     placeholder="Search projects and prompts..."
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                    style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                                    className="flex-1"
                                 />
-                                <button onClick={handleSearch} style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                                    🔍
-                                </button>
+                                <Button onClick={handleSearch}>
+                                    <Search className="w-4 h-4" />
+                                </Button>
                             </div>
                         </div>
 
                         {/* Search History */}
                         {searchHistory.length > 0 && (
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
-                                    📜 Recent Searches
-                                </label>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Recent Searches
+                                </Label>
+                                <div className="flex flex-wrap gap-2">
                                     {searchHistory.map((query, index) => (
-                                        <span
+                                        <Badge
                                             key={index}
+                                            variant="secondary"
+                                            className="cursor-pointer hover:bg-accent"
                                             onClick={() => handleHistoryClick(query)}
-                                            style={{ background: '#f0f0f0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
                                         >
                                             {query}
-                                        </span>
+                                        </Badge>
                                     ))}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <hr style={{ border: 'none', borderTop: '1px solid #ccc', margin: '24px 0' }} />
+                    <Separator />
 
                     {/* Filters */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            🔧 Filters
+                    <div className="space-y-4">
+                        <h4 className="text-lg font-semibold flex items-center gap-2">
+                            <Tag className="w-5 h-5" />
+                            Filters
                         </h4>
 
                         {/* Tags Filter */}
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
-                                🏷️ Tags
-                            </label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-2">
+                                <Tag className="w-4 h-4" />
+                                Tags
+                            </Label>
+                            <div className="flex flex-wrap gap-2">
                                 {allTags.map(tag => (
-                                    <span
+                                    <Badge
                                         key={tag}
+                                        variant={filters.tags.includes(tag) ? "default" : "outline"}
+                                        className="cursor-pointer"
                                         onClick={() => {
                                             setFilters(prev => ({
                                                 ...prev,
@@ -264,175 +278,186 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                                                     : [...prev.tags, tag]
                                             }));
                                         }}
-                                        style={{
-                                            background: filters.tags.includes(tag) ? '#007bff' : '#f0f0f0',
-                                            color: filters.tags.includes(tag) ? 'white' : 'black',
-                                            padding: '4px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            cursor: 'pointer'
-                                        }}
                                     >
                                         {tag}
-                                    </span>
+                                    </Badge>
                                 ))}
                             </div>
                         </div>
 
                         {/* Date Range */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
-                                    📅 Start Date
-                                </label>
-                                <input
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="start-date" className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Start Date
+                                </Label>
+                                <Input
+                                    id="start-date"
                                     type="date"
                                     value={filters.dateRange.start}
                                     onChange={(e) => setFilters(prev => ({
                                         ...prev,
                                         dateRange: { ...prev.dateRange, start: e.target.value }
                                     }))}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                 />
                             </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>End Date</label>
-                                <input
+                            <div className="space-y-2">
+                                <Label htmlFor="end-date">End Date</Label>
+                                <Input
+                                    id="end-date"
                                     type="date"
                                     value={filters.dateRange.end}
                                     onChange={(e) => setFilters(prev => ({
                                         ...prev,
                                         dateRange: { ...prev.dateRange, end: e.target.value }
                                     }))}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                 />
                             </div>
                         </div>
 
                         {/* Project Type */}
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Project Type</label>
-                            <select
+                        <div className="space-y-2">
+                            <Label htmlFor="project-type">Project Type</Label>
+                            <Select
                                 value={filters.projectType}
-                                onChange={(e) => setFilters(prev => ({
+                                onValueChange={(value) => setFilters(prev => ({
                                     ...prev,
-                                    projectType: e.target.value as 'all' | 'recent' | 'tagged'
+                                    projectType: value as 'all' | 'recent' | 'tagged'
                                 }))}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                             >
-                                <option value="all">All Projects</option>
-                                <option value="recent">Recent (Last 7 days)</option>
-                                <option value="tagged">Tagged Projects</option>
-                            </select>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Projects</SelectItem>
+                                    <SelectItem value="recent">Recent (Last 7 days)</SelectItem>
+                                    <SelectItem value="tagged">Tagged Projects</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         {/* Sort Options */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Sort By</label>
-                                <select
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="sort-by">Sort By</Label>
+                                <Select
                                     value={filters.sortBy}
-                                    onChange={(e) => setFilters(prev => ({
+                                    onValueChange={(value) => setFilters(prev => ({
                                         ...prev,
-                                        sortBy: e.target.value as 'name' | 'date' | 'tags'
+                                        sortBy: value as 'name' | 'date' | 'tags'
                                     }))}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                                 >
-                                    <option value="name">Name</option>
-                                    <option value="date">Date Created</option>
-                                    <option value="tags">Number of Tags</option>
-                                </select>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="name">Name</SelectItem>
+                                        <SelectItem value="date">Date Created</SelectItem>
+                                        <SelectItem value="tags">Number of Tags</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Sort Order</label>
-                                <select
+                            <div className="space-y-2">
+                                <Label htmlFor="sort-order">Sort Order</Label>
+                                <Select
                                     value={filters.sortOrder}
-                                    onChange={(e) => setFilters(prev => ({
+                                    onValueChange={(value) => setFilters(prev => ({
                                         ...prev,
-                                        sortOrder: e.target.value as 'asc' | 'desc'
+                                        sortOrder: value as 'asc' | 'desc'
                                     }))}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                                 >
-                                    <option value="asc">Ascending</option>
-                                    <option value="desc">Descending</option>
-                                </select>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="asc">Ascending</SelectItem>
+                                        <SelectItem value="desc">Descending</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </div>
 
-                    <hr style={{ border: 'none', borderTop: '1px solid #ccc', margin: '24px 0' }} />
+                    <Separator />
 
                     {/* Saved Searches */}
-                    <div style={{ marginBottom: '24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Saved Searches</h4>
-                            <button
-                                onClick={() => setShowSavedSearches(!showSavedSearches)}
-                                style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
-                            >
-                                {showSavedSearches ? 'Hide' : 'Show'}
-                            </button>
-                        </div>
-
-                        {showSavedSearches && (
-                            <div>
-                                {/* Save Current Search */}
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Name for this search..."
-                                        value={newSearchName}
-                                        onChange={(e) => setNewSearchName(e.target.value)}
-                                        style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                                    />
-                                    <button onClick={handleSaveSearch} disabled={!newSearchName.trim()} style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
-                                        💾 Save
-                                    </button>
-                                </div>
-
-                                {/* Saved Searches List */}
-                                {savedSearches.length > 0 ? (
-                                    <div>
-                                        {savedSearches.map(savedSearch => (
-                                            <div key={savedSearch.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '8px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <button
-                                                        onClick={() => handleLoadSavedSearch(savedSearch)}
-                                                        style={{ padding: '4px 8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
-                                                    >
-                                                        {savedSearch.name}
-                                                    </button>
-                                                    <span style={{ fontSize: '12px', color: '#666' }}>
-                                                        {new Date(savedSearch.createdAt).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleRemoveSavedSearch(savedSearch.id)}
-                                                    style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
-                                                >
-                                                    ×
-                                                </button>
-                                            </div>
-                                        ))}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-semibold">Saved Searches</h4>
+                            <Collapsible open={showSavedSearches} onOpenChange={setShowSavedSearches}>
+                                <CollapsibleTrigger asChild>
+                                    <Button variant="outline">
+                                        {showSavedSearches ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        {showSavedSearches ? 'Hide' : 'Show'}
+                                    </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-4 mt-4">
+                                    {/* Save Current Search */}
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="text"
+                                            placeholder="Name for this search..."
+                                            value={newSearchName}
+                                            onChange={(e) => setNewSearchName(e.target.value)}
+                                            className="flex-1"
+                                        />
+                                        <Button onClick={handleSaveSearch} disabled={!newSearchName.trim()}>
+                                            <Save className="w-4 h-4 mr-2" />
+                                            Save
+                                        </Button>
                                     </div>
-                                ) : (
-                                    <p style={{ color: '#666', fontSize: '14px' }}>No saved searches yet.</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
 
-                    {/* Actions */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px' }}>
-                        <button onClick={onClose} style={{ padding: '12px 24px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                            Close
-                        </button>
-                        <button onClick={handleSearch} style={{ padding: '12px 24px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}>
-                            🔍 Search
-                        </button>
+                                    {/* Saved Searches List */}
+                                    {savedSearches.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {savedSearches.map(savedSearch => (
+                                                <Card key={savedSearch.id}>
+                                                    <CardContent className="p-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleLoadSavedSearch(savedSearch)}
+                                                                >
+                                                                    {savedSearch.name}
+                                                                </Button>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {new Date(savedSearch.createdAt).toLocaleDateString()}
+                                                                </span>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleRemoveSavedSearch(savedSearch.id)}
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">No saved searches yet.</p>
+                                    )}
+                                </CollapsibleContent>
+                            </Collapsible>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>
+                        Close
+                    </Button>
+                    <Button onClick={handleSearch}>
+                        <Search className="w-4 h-4 mr-2" />
+                        Search
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
