@@ -1,0 +1,118 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { StructuralElementCard } from '@/components/StructuralElementCard'
+import { StructuralElement } from '@/types'
+
+// Mock the drag-and-drop functionality
+vi.mock('@dnd-kit/sortable', () => ({
+    useSortable: () => ({
+        attributes: {},
+        listeners: {},
+        setNodeRef: vi.fn(),
+        transform: null,
+        transition: null,
+        isDragging: false,
+    }),
+}))
+
+vi.mock('@dnd-kit/utilities', () => ({
+    CSS: {
+        Transform: {
+            toString: () => '',
+        },
+    },
+}))
+
+describe('StructuralElementCard', () => {
+    const mockElement: StructuralElement = {
+        id: 'test-1',
+        name: 'Test Element',
+        enabled: true,
+        content: 'Test content with {{text:Name:Default}}'
+    }
+
+    const mockHandlers = {
+        onUpdate: vi.fn(),
+        onDelete: vi.fn(),
+        onToggle: vi.fn(),
+    }
+
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
+    it('should render element name', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        expect(screen.getByDisplayValue('Test Element')).toBeInTheDocument()
+    })
+
+    it('should render element content', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        expect(screen.getByDisplayValue('Test content with {{text:Name:Default}}')).toBeInTheDocument()
+    })
+
+    it('should show enabled state', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        expect(screen.getByText('On')).toBeInTheDocument()
+    })
+
+    it('should show disabled state', () => {
+        const disabledElement = { ...mockElement, enabled: false }
+        render(<StructuralElementCard element={disabledElement} {...mockHandlers} />)
+
+        expect(screen.getByText('Off')).toBeInTheDocument()
+    })
+
+    it('should call onUpdate when name changes', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        const nameInput = screen.getByDisplayValue('Test Element')
+        fireEvent.change(nameInput, { target: { value: 'New Name' } })
+
+        expect(mockHandlers.onUpdate).toHaveBeenCalledWith('test-1', { name: 'New Name' })
+    })
+
+    it('should call onUpdate when content changes', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        const contentInput = screen.getByDisplayValue('Test content with {{text:Name:Default}}')
+        fireEvent.change(contentInput, { target: { value: 'New content' } })
+
+        expect(mockHandlers.onUpdate).toHaveBeenCalledWith('test-1', { content: 'New content' })
+    })
+
+    it('should call onToggle when toggle button clicked', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        const toggleButton = screen.getByText('On')
+        fireEvent.click(toggleButton)
+
+        expect(mockHandlers.onToggle).toHaveBeenCalledWith('test-1')
+    })
+
+    it('should call onDelete when delete button clicked', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        const deleteButton = screen.getByRole('button', { name: /trash/i })
+        fireEvent.click(deleteButton)
+
+        expect(mockHandlers.onDelete).toHaveBeenCalledWith('test-1')
+    })
+
+    it('should render control panel for content with controls', () => {
+        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
+
+        // Should show the control panel with dynamic controls
+        expect(screen.getByText('Dynamic Controls')).toBeInTheDocument()
+    })
+
+    it('should show no controls message for content without controls', () => {
+        const elementWithoutControls = { ...mockElement, content: 'Simple text without controls' }
+        render(<StructuralElementCard element={elementWithoutControls} {...mockHandlers} />)
+
+        expect(screen.getByText(/No dynamic controls found/)).toBeInTheDocument()
+    })
+})
