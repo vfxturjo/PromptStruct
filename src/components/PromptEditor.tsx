@@ -21,10 +21,10 @@ export function PromptEditor({ value, onChange, placeholder, className }: Prompt
                 }}
             />
             <div className="mt-2 text-xs text-muted-foreground">
-                💡 Use <code className="bg-muted px-1 rounded">{'{{text:Name:Default}}'}</code>,
-                <code className="bg-muted px-1 rounded">{'{{select:Name:Option1|Option2}}'}</code>,
-                <code className="bg-muted px-1 rounded">{'{{slider:Name:50}}'}</code>, or
-                <code className="bg-muted px-1 rounded">{'{{toggle:Name}}...{{/toggle:Name}}'}</code> for dynamic controls
+                💡 Use <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{text:Name:Default}}'}</code>,
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{select:Name:Option1|Option2}}'}</code>,
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{slider:Name:50}}'}</code>, or
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{toggle:Name}}...{{/toggle:Name}}'}</code> for dynamic controls
             </div>
         </div>
     );

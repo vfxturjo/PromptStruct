@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Typography } from '@/components/ui/typography';
 import { Project, Prompt } from '@/types';
 import { Search, Filter, X, Tag, Calendar, Save, History } from 'lucide-react';
 
@@ -251,10 +252,10 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
 
                     {/* Filters */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium flex items-center gap-2">
+                        <Typography variant="h3" className="text-lg font-medium flex items-center gap-2">
                             <Filter className="h-5 w-5" />
                             Filters
-                        </h3>
+                        </Typography>
 
                         {/* Tags Filter */}
                         <div className="space-y-2">
@@ -368,7 +369,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                     {/* Saved Searches */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-medium">Saved Searches</h3>
+                            <Typography variant="h3" className="text-lg font-medium">Saved Searches</Typography>
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -421,7 +422,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">No saved searches yet.</p>
+                                    <Typography variant="muted">No saved searches yet.</Typography>
                                 )}
                             </div>
                         )}

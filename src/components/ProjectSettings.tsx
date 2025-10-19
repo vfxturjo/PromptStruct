@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Typography } from '@/components/ui/typography';
 import { Separator } from '@/components/ui/separator';
 import { useEditorStore } from '@/stores/editorStore';
 import { NotificationService } from '@/services/notificationService';
@@ -97,7 +98,7 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
                 <CardContent className="space-y-6">
                     {/* Basic Information */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Basic Information</h3>
+                        <Typography variant="h3" className="text-lg font-medium">Basic Information</Typography>
 
                         <div className="space-y-2">
                             <Label htmlFor="project-name">Project Name</Label>
@@ -155,7 +156,7 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
 
                     {/* Default Template */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Default Prompt Template</h3>
+                        <Typography variant="h3" className="text-lg font-medium">Default Prompt Template</Typography>
                         <div className="space-y-2">
                             <Label htmlFor="default-template">Template Content</Label>
                             <Textarea
@@ -165,9 +166,9 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
                                 placeholder="Enter default template for new prompts..."
                                 rows={4}
                             />
-                            <p className="text-sm text-muted-foreground">
+                            <Typography variant="muted">
                                 This template will be used when creating new prompts in this project.
-                            </p>
+                            </Typography>
                         </div>
                     </div>
 
@@ -175,15 +176,15 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
 
                     {/* Settings */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Project Settings</h3>
+                        <Typography variant="h3" className="text-lg font-medium">Project Settings</Typography>
 
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <Label>Auto-save</Label>
-                                    <p className="text-sm text-muted-foreground">
+                                    <Typography variant="muted">
                                         Automatically save changes to prompts
-                                    </p>
+                                    </Typography>
                                 </div>
                                 <Switch
                                     checked={autoSaveEnabled}

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Typography } from '@/components/ui/typography';
 import { useEditorStore } from '@/stores/editorStore';
 import { Project, Prompt } from '@/types';
 import { Plus, FolderOpen, FileText, Tag, Calendar, Download, Upload, Edit2, Copy, Settings, Search, Layout } from 'lucide-react';
@@ -307,13 +308,13 @@ export function ProjectBrowser() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background overflow-hidden">
+        <div className="h-screen flex flex-col">
             {/* Header */}
-            <div className="p-6 border-b bg-card/50 backdrop-blur-sm flex-shrink-0">
+            <div className="p-6 border-b">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    <Typography variant="h2">
                         Project Browser
-                    </h2>
+                    </Typography>
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
@@ -386,23 +387,22 @@ export function ProjectBrowser() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 flex overflow-hidden min-h-0">
+            <div className="flex-1 flex">
                 {/* Projects List */}
-                <div className="w-1/2 border-r p-4 overflow-y-auto overflow-x-hidden">
-                    <h3 className="font-medium mb-3">Projects</h3>
-                    <div className="space-y-2">
+                <div className="w-1/2 border-r p-4">
+                    <Typography variant="h3" className="mb-3">Projects</Typography>
+                    <div>
                         {filteredProjects.map((project) => (
                             <Card
                                 key={project.id}
-                                className={`cursor-pointer transition-colors ${selectedProject?.id === project.id ? 'ring-2 ring-primary' : ''
-                                    }`}
+                                className="cursor-pointer"
                                 onClick={() => setSelectedProject(project)}
                             >
                                 <CardContent className="p-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                                            <span className="font-medium">{project.name}</span>
+                                            <Typography variant="large">{project.name}</Typography>
                                         </div>
                                         <div className="flex gap-1">
                                             <Button
@@ -443,7 +443,7 @@ export function ProjectBrowser() {
                                     </div>
                                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                                         <Calendar className="h-3 w-3" />
-                                        <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                                        <Typography variant="muted">{new Date(project.createdAt).toLocaleDateString()}</Typography>
                                         {project.tags.length > 0 && (
                                             <>
                                                 <Tag className="h-3 w-3" />
@@ -469,16 +469,16 @@ export function ProjectBrowser() {
                 </div>
 
                 {/* Prompts List */}
-                <div className="w-1/2 p-4 overflow-y-auto overflow-x-hidden">
+                <div className="w-1/2 p-4">
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium">
+                        <Typography variant="h3">
                             {selectedProject ? `${selectedProject.name} - Prompts` : 'Select a Project'}
                             {bulkMode && selectedPrompts.size > 0 && (
-                                <span className="ml-2 text-sm text-muted-foreground">
+                                <Typography variant="small" className="ml-2">
                                     ({selectedPrompts.size} selected)
-                                </span>
+                                </Typography>
                             )}
-                        </h3>
+                        </Typography>
                         <div className="flex gap-2">
                             {bulkMode && selectedPrompts.size > 0 && (
                                 <>
@@ -517,9 +517,7 @@ export function ProjectBrowser() {
                             {projectPrompts.map((prompt) => (
                                 <Card
                                     key={prompt.id}
-                                    className={`cursor-pointer hover:bg-muted/50 ${bulkMode ? 'border-2' : ''
-                                        } ${selectedPrompts.has(prompt.id) ? 'border-primary bg-primary/5' : ''
-                                        }`}
+                                    className="cursor-pointer"
                                     onClick={() => {
                                         if (bulkMode) {
                                             handleBulkSelect(prompt.id);
@@ -555,12 +553,12 @@ export function ProjectBrowser() {
                                                                 setEditingPromptName('');
                                                             }
                                                         }}
-                                                        className="h-6 text-sm font-medium"
+                                                        className="h-6"
                                                         autoFocus
                                                     />
                                                 ) : (
                                                     <span
-                                                        className="font-medium cursor-pointer hover:text-primary"
+                                                        className="cursor-pointer hover:text-primary"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (!bulkMode) startEditingPrompt(prompt);
@@ -619,7 +617,7 @@ export function ProjectBrowser() {
                                         </div>
                                         <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                                             <Calendar className="h-3 w-3" />
-                                            <span>{new Date(prompt.createdAt).toLocaleDateString()}</span>
+                                            <Typography variant="muted">{new Date(prompt.createdAt).toLocaleDateString()}</Typography>
                                             {prompt.tags.length > 0 && (
                                                 <>
                                                     <Tag className="h-3 w-3" />
@@ -652,7 +650,7 @@ export function ProjectBrowser() {
 
             {/* New Project Form */}
             {showNewProjectForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 flex items-center justify-center z-50">
                     <Card className="w-96">
                         <CardHeader>
                             <CardTitle>Create New Project</CardTitle>

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Typography } from '@/components/ui/typography';
 import { StructuralElementCard } from './StructuralElementCard';
 import { useEditorStore } from '@/stores/editorStore';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -136,9 +137,9 @@ export function MainLayout() {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-background overflow-hidden">
+        <div className="h-screen flex flex-col">
             {/* Header */}
-            <header className="border-b bg-card/50 backdrop-blur-sm px-6 py-4 flex-shrink-0">
+            <header className="border-b p-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button
@@ -150,13 +151,13 @@ export function MainLayout() {
                             Back to Browser
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                            <Typography variant="h1">
                                 Project Gemini
-                            </h1>
+                            </Typography>
                             {currentProject && currentPrompt && (
-                                <p className="text-sm text-muted-foreground">
+                                <Typography variant="muted">
                                     {currentProject.name} → {currentPrompt.name}
-                                </p>
+                                </Typography>
                             )}
                         </div>
                     </div>
@@ -188,30 +189,29 @@ export function MainLayout() {
             </header>
 
             {/* Main Content */}
-            <div className="flex-1 flex overflow-hidden relative min-h-0">
+            <div className="flex-1 flex">
                 <PanelGroup direction="horizontal" className="h-full">
                     {/* Structure Panel */}
                     <Panel defaultSize={30} minSize={20} maxSize={50}>
-                        <div className="h-full border-r bg-muted/30 p-4 overflow-y-auto overflow-x-hidden">
+                        <div className="h-full border-r p-4">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className="text-lg flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                    <CardTitle>
                                         Structure
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-3">
+                                <CardContent>
                                     <DndContext
                                         sensors={sensors}
                                         collisionDetection={closestCenter}
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext items={structure.map(el => el.id)} strategy={verticalListSortingStrategy}>
-                                            <div className="space-y-2">
+                                            <div>
                                                 {structure.length === 0 ? (
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <Typography variant="muted">
                                                         No structural elements yet. Add one to get started.
-                                                    </p>
+                                                    </Typography>
                                                 ) : (
                                                     structure.map((element) => (
                                                         <StructuralElementCard
@@ -235,32 +235,31 @@ export function MainLayout() {
                         </div>
                     </Panel>
 
-                    <PanelResizeHandle className="w-2 bg-border hover:bg-border/80 transition-colors" />
+                    <PanelResizeHandle className="w-2" />
 
                     {/* Preview Panel */}
                     <Panel defaultSize={helpPanelExpanded ? 50 : 70} minSize={30}>
-                        <div className="h-full p-4 overflow-hidden">
+                        <div className="h-full p-4">
                             <Card className="h-full flex flex-col">
-                                <CardHeader className="flex-shrink-0">
-                                    <CardTitle className="text-lg flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
                                         Preview
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-                                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                                <CardContent className="flex-1">
+                                    <Typography variant="p" className="whitespace-pre-wrap">
                                         {structure.length === 0 ? (
-                                            <div className="text-center py-8 text-muted-foreground">
+                                            <div className="text-center py-8">
                                                 <div className="text-4xl mb-4">✨</div>
-                                                <p>Your rendered prompt will appear here...</p>
-                                                <p className="text-xs mt-2">Add some elements to get started</p>
+                                                <Typography variant="p">Your rendered prompt will appear here...</Typography>
+                                                <Typography variant="small" className="mt-2">Add some elements to get started</Typography>
                                             </div>
                                         ) : (
                                             renderPreview()
                                         )}
-                                    </div>
+                                    </Typography>
                                 </CardContent>
-                                <div className="p-4 border-t flex-shrink-0">
+                                <div className="p-4 border-t">
                                     <Button
                                         className="w-full"
                                         onClick={handleCopyPrompt}
@@ -277,13 +276,12 @@ export function MainLayout() {
                     {/* Help Panel */}
                     {helpPanelExpanded && (
                         <>
-                            <PanelResizeHandle className="w-2 bg-border hover:bg-border/80 transition-colors" />
+                            <PanelResizeHandle className="w-2" />
                             <Panel defaultSize={20} minSize={15} maxSize={40}>
-                                <div className="h-full border-l bg-muted/30 p-4 overflow-y-auto overflow-x-hidden">
+                                <div className="h-full border-l p-4">
                                     <Card className="h-full">
                                         <CardHeader className="flex flex-row items-center justify-between">
-                                            <CardTitle className="text-sm flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                            <CardTitle className="flex items-center gap-2">
                                                 Help
                                             </CardTitle>
                                             <Button
@@ -294,51 +292,51 @@ export function MainLayout() {
                                                 <ChevronRight className="h-4 w-4" />
                                             </Button>
                                         </CardHeader>
-                                        <CardContent className="space-y-4 text-xs">
+                                        <CardContent>
                                             <div>
-                                                <h4 className="font-medium mb-2">📝 Edit Elements</h4>
-                                                <p className="text-muted-foreground">
+                                                <Typography variant="h4" className="mb-2">📝 Edit Elements</Typography>
+                                                <Typography variant="muted">
                                                     Click on any element in the left panel to edit its content.
-                                                </p>
+                                                </Typography>
                                             </div>
 
                                             <div>
-                                                <h4 className="font-medium mb-2">🎛️ Control Syntax</h4>
-                                                <div className="space-y-2">
+                                                <Typography variant="h4" className="mb-2">🎛️ Control Syntax</Typography>
+                                                <div>
                                                     <div>
-                                                        <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{text:Name:Default}}'}</code>
-                                                        <span className="text-muted-foreground ml-1">→ Text input</span>
+                                                        <Typography variant="inlineCode">{'{{text:Name:Default}}'}</Typography>
+                                                        <Typography variant="muted" className="ml-1">→ Text input</Typography>
                                                     </div>
                                                     <div>
-                                                        <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{select:Name:Option1|Option2}}'}</code>
-                                                        <span className="text-muted-foreground ml-1">→ Dropdown</span>
+                                                        <Typography variant="inlineCode">{'{{select:Name:Option1|Option2}}'}</Typography>
+                                                        <Typography variant="muted" className="ml-1">→ Dropdown</Typography>
                                                     </div>
                                                     <div>
-                                                        <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{slider:Name:50}}'}</code>
-                                                        <span className="text-muted-foreground ml-1">→ Slider</span>
+                                                        <Typography variant="inlineCode">{'{{slider:Name:50}}'}</Typography>
+                                                        <Typography variant="muted" className="ml-1">→ Slider</Typography>
                                                     </div>
                                                     <div>
-                                                        <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{toggle:Name}}...{{/toggle:Name}}'}</code>
-                                                        <span className="text-muted-foreground ml-1">→ Toggle block</span>
+                                                        <Typography variant="inlineCode">{'{{toggle:Name}}...{{/toggle:Name}}'}</Typography>
+                                                        <Typography variant="muted" className="ml-1">→ Toggle block</Typography>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <h4 className="font-medium mb-2">⌨️ Shortcuts</h4>
-                                                <div className="space-y-1">
-                                                    <div><kbd className="bg-muted px-1 rounded text-xs">Ctrl+N</kbd> Add element</div>
-                                                    <div><kbd className="bg-muted px-1 rounded text-xs">Ctrl+S</kbd> Save</div>
-                                                    <div><kbd className="bg-muted px-1 rounded text-xs">Ctrl+C</kbd> Copy prompt</div>
-                                                    <div><kbd className="bg-muted px-1 rounded text-xs">Escape</kbd> Back to browser</div>
+                                                <Typography variant="h4" className="mb-2">⌨️ Shortcuts</Typography>
+                                                <div>
+                                                    <div><Typography variant="inlineCode">Ctrl+N</Typography> Add element</div>
+                                                    <div><Typography variant="inlineCode">Ctrl+S</Typography> Save</div>
+                                                    <div><Typography variant="inlineCode">Ctrl+C</Typography> Copy prompt</div>
+                                                    <div><Typography variant="inlineCode">Escape</Typography> Back to browser</div>
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <h4 className="font-medium mb-2">🔄 Preview Modes</h4>
-                                                <div className="space-y-1">
-                                                    <div><strong>Clean:</strong> Final prompt with values</div>
-                                                    <div><strong>Raw:</strong> Prompt with {'{{...}}'} syntax</div>
+                                                <Typography variant="h4" className="mb-2">🔄 Preview Modes</Typography>
+                                                <div>
+                                                    <div><Typography variant="large">Clean:</Typography> Final prompt with values</div>
+                                                    <div><Typography variant="large">Raw:</Typography> Prompt with {'{{...}}'} syntax</div>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -351,12 +349,11 @@ export function MainLayout() {
 
                 {/* Help Panel Toggle (when collapsed) */}
                 {!helpPanelExpanded && (
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    <div className="absolute right-4 top-1/2">
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setHelpPanelExpanded(true)}
-                            className="shadow-lg"
                         >
                             <HelpCircle className="h-4 w-4" />
                         </Button>

@@ -1,6 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
+import { Typography } from '@/components/ui/typography';
 import { parseControlSyntax } from '@/utils/syntaxParser';
 
 interface ControlPanelProps {
@@ -14,25 +15,27 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
     if (controls.length === 0) {
         return (
-            <div className="text-sm text-muted-foreground p-2">
-                No dynamic controls found. Use <code className="bg-muted px-1 rounded">{'{{text:Name:Default}}'}</code> syntax to add controls.
+            <div className="p-2">
+                <Typography variant="muted">
+                    No dynamic controls found. Use <Typography variant="inlineCode">{'{{text:Name:Default}}'}</Typography> syntax to add controls.
+                </Typography>
             </div>
         );
     }
 
     return (
-        <div className="space-y-3 p-3 border-t bg-muted/30">
-            <h4 className="text-sm font-medium text-muted-foreground">Dynamic Controls</h4>
+        <div className="p-3 border-t">
+            <Typography variant="h4" className="text-sm font-medium text-muted-foreground">Dynamic Controls</Typography>
             {controls.map((control) => {
                 const currentValue = controlValues[control.element.name] ?? control.element.defaultValue;
 
                 switch (control.element.type) {
                     case 'text':
                         return (
-                            <div key={control.element.name} className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">
+                            <div key={control.element.name}>
+                                <Typography variant="small" className="text-muted-foreground">
                                     {control.element.name}
-                                </label>
+                                </Typography>
                                 <Input
                                     value={currentValue || ''}
                                     onChange={(e) => onControlChange(control.element.name, e.target.value)}
@@ -44,10 +47,10 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
                     case 'select':
                         return (
-                            <div key={control.element.name} className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">
+                            <div key={control.element.name}>
+                                <Typography variant="small" className="text-muted-foreground">
                                     {control.element.name}
-                                </label>
+                                </Typography>
                                 <Select
                                     value={currentValue || control.element.defaultValue}
                                     onValueChange={(value) => onControlChange(control.element.name, value)}
@@ -69,10 +72,10 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                     case 'slider':
                         const sliderValue = parseInt(currentValue) || parseInt(control.element.defaultValue || '50');
                         return (
-                            <div key={control.element.name} className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">
+                            <div key={control.element.name}>
+                                <Typography variant="small" className="text-muted-foreground">
                                     {control.element.name}: {sliderValue}
-                                </label>
+                                </Typography>
                                 <input
                                     type="range"
                                     min={control.element.min || 0}
@@ -86,7 +89,7 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
                     case 'toggle':
                         return (
-                            <div key={control.element.name} className="space-y-1">
+                            <div key={control.element.name}>
                                 <div className="flex items-center gap-2">
                                     <Toggle
                                         pressed={!!currentValue}

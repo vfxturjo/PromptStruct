@@ -51,7 +51,7 @@ export function StructuralElementCard({
                         <div
                             {...attributes}
                             {...listeners}
-                            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+                            className="cursor-grab active:cursor-grabbing p-1"
                         >
                             <GripVertical className="h-4 w-4 text-muted-foreground" />
                         </div>

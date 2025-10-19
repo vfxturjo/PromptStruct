@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Typography } from '@/components/ui/typography';
 import { Layout, Plus, X, Download, Upload, Copy, Trash2, Star } from 'lucide-react';
 
 interface ProjectTemplate {
@@ -429,9 +430,9 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                                                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                                                 )}
                                             </CardTitle>
-                                            <p className="text-sm text-muted-foreground mt-1">
+                                            <Typography variant="muted" className="mt-1">
                                                 {template.description}
-                                            </p>
+                                            </Typography>
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-2">
@@ -491,7 +492,7 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                     {filteredTemplates.length === 0 && (
                         <div className="text-center py-8 text-muted-foreground">
                             <Layout className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No templates found matching your criteria.</p>
+                            <Typography variant="muted">No templates found matching your criteria.</Typography>
                         </div>
                     )}
                 </CardContent>
