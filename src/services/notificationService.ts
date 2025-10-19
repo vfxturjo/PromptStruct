@@ -1,28 +1,27 @@
-import { toast } from 'sonner';
-
 export class NotificationService {
     static success(message: string) {
-        toast.success(message);
+        console.log('✅ Success:', message);
     }
 
     static error(message: string) {
-        toast.error(message);
+        console.error('❌ Error:', message);
     }
 
     static warning(message: string) {
-        toast.warning(message);
+        console.warn('⚠️ Warning:', message);
     }
 
     static info(message: string) {
-        toast.info(message);
+        console.info('ℹ️ Info:', message);
     }
 
     static loading(message: string) {
-        return toast.loading(message);
+        console.log('⏳ Loading:', message);
+        return 'loading-id';
     }
 
     static dismiss(id?: string | number) {
-        toast.dismiss(id);
+        console.log('Dismissed notification:', id);
     }
 
     // Specific notification types for the app

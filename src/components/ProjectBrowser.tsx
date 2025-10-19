@@ -1,11 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Typography } from '@/components/ui/typography';
 import { useEditorStore } from '@/stores/editorStore';
 import { Project, Prompt } from '@/types';
-import { Plus, FolderOpen, FileText, Tag, Calendar, Download, Upload, Edit2, Copy, Settings, Search, Layout } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationService } from '@/services/notificationService';
@@ -308,127 +302,137 @@ export function ProjectBrowser() {
     };
 
     return (
-        <div className="h-screen flex flex-col">
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
-            <div className="p-6 border-b">
-                <div className="flex items-center justify-between mb-4">
-                    <Typography variant="h2">
+            <div style={{ padding: '24px', borderBottom: '1px solid #ccc' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
                         Project Browser
-                    </Typography>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
+                    </h2>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
                             onClick={() => setShowNewProjectForm(true)}
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                         >
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Project
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
+                            ➕ New Project
+                        </button>
+                        <button
                             onClick={() => document.getElementById('import-file')?.click()}
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                         >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Import
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
+                            📤 Import
+                        </button>
+                        <button
                             onClick={() => setShowProjectTemplates(true)}
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                         >
-                            <Layout className="h-4 w-4 mr-2" />
-                            Templates
-                        </Button>
+                            📋 Templates
+                        </button>
                         {selectedProject && projectPrompts.length > 0 && (
-                            <Button
-                                variant={bulkMode ? "default" : "outline"}
-                                size="sm"
+                            <button
                                 onClick={() => {
                                     setBulkMode(!bulkMode);
                                     setSelectedPrompts(new Set());
                                 }}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: '1px solid #ccc',
+                                    background: bulkMode ? '#007bff' : 'white',
+                                    color: bulkMode ? 'white' : 'black',
+                                    cursor: 'pointer'
+                                }}
                             >
                                 {bulkMode ? "Exit Bulk" : "Bulk Mode"}
-                            </Button>
+                            </button>
                         )}
                         <input
                             id="import-file"
                             type="file"
                             accept=".json"
                             onChange={handleImportProject}
-                            className="hidden"
+                            style={{ display: 'none' }}
                         />
                     </div>
                 </div>
 
                 {/* Search */}
-                <div className="flex gap-2">
-                    <Input
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
                         placeholder="Search projects..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            flex: 1,
+                            padding: '8px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px'
+                        }}
                     />
-                    <Button
-                        variant="outline"
+                    <button
                         onClick={() => setShowAdvancedSearch(true)}
+                        style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                     >
-                        <Search className="h-4 w-4" />
-                    </Button>
+                        🔍
+                    </button>
                     {searchResults && (
-                        <Button
-                            variant="outline"
+                        <button
                             onClick={clearSearchResults}
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                         >
                             Clear
-                        </Button>
+                        </button>
                     )}
                 </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 flex">
+            <div style={{ flex: 1, display: 'flex' }}>
                 {/* Projects List */}
-                <div className="w-1/2 border-r p-4">
-                    <Typography variant="h3" className="mb-3">Projects</Typography>
+                <div style={{ width: '50%', borderRight: '1px solid #ccc', padding: '16px' }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: 'bold' }}>Projects</h3>
                     <div>
                         {filteredProjects.map((project) => (
-                            <Card
+                            <div
                                 key={project.id}
-                                className="cursor-pointer"
                                 onClick={() => setSelectedProject(project)}
+                                style={{
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer',
+                                    background: selectedProject?.id === project.id ? '#f0f8ff' : 'white'
+                                }}
                             >
-                                <CardContent className="p-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                                            <Typography variant="large">{project.name}</Typography>
+                                <div style={{ padding: '12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span>📁</span>
+                                            <strong>{project.name}</strong>
                                         </div>
-                                        <div className="flex gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setSelectedProject(project);
                                                     setShowProjectSettings(true);
                                                 }}
+                                                style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                                                title="Settings"
                                             >
-                                                <Settings className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
+                                                ⚙️
+                                            </button>
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleExportProject(project);
                                                 }}
+                                                style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                                                title="Export"
                                             >
-                                                <Download className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
+                                                📥
+                                            </button>
+                                            <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     deleteProject(project.id);
@@ -436,88 +440,84 @@ export function ProjectBrowser() {
                                                         setSelectedProject(null);
                                                     }
                                                 }}
+                                                style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                                                title="Delete"
                                             >
                                                 ×
-                                            </Button>
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Calendar className="h-3 w-3" />
-                                        <Typography variant="muted">{new Date(project.createdAt).toLocaleDateString()}</Typography>
+                                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#666' }}>
+                                        <span>📅</span>
+                                        <span>{new Date(project.createdAt).toLocaleDateString()}</span>
                                         {project.tags.length > 0 && (
                                             <>
-                                                <Tag className="h-3 w-3" />
-                                                <div className="flex gap-1">
+                                                <span>🏷️</span>
+                                                <div style={{ display: 'flex', gap: '4px' }}>
                                                     {project.tags.slice(0, 2).map((tag) => (
-                                                        <Badge key={tag} variant="secondary" className="text-xs">
+                                                        <span key={tag} style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
                                                             {tag}
-                                                        </Badge>
+                                                        </span>
                                                     ))}
                                                     {project.tags.length > 2 && (
-                                                        <Badge variant="secondary" className="text-xs">
+                                                        <span style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
                                                             +{project.tags.length - 2}
-                                                        </Badge>
+                                                        </span>
                                                     )}
                                                 </div>
                                             </>
                                         )}
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Prompts List */}
-                <div className="w-1/2 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <Typography variant="h3">
+                <div style={{ width: '50%', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
                             {selectedProject ? `${selectedProject.name} - Prompts` : 'Select a Project'}
                             {bulkMode && selectedPrompts.size > 0 && (
-                                <Typography variant="small" className="ml-2">
+                                <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
                                     ({selectedPrompts.size} selected)
-                                </Typography>
+                                </span>
                             )}
-                        </Typography>
-                        <div className="flex gap-2">
+                        </h3>
+                        <div style={{ display: 'flex', gap: '8px' }}>
                             {bulkMode && selectedPrompts.size > 0 && (
                                 <>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
+                                    <button
                                         onClick={handleBulkExport}
+                                        style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                     >
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Export Selected
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
+                                        📥 Export Selected
+                                    </button>
+                                    <button
                                         onClick={handleBulkDelete}
+                                        style={{ padding: '8px 16px', border: '1px solid #ccc', background: '#dc3545', color: 'white', cursor: 'pointer' }}
                                     >
                                         Delete Selected
-                                    </Button>
+                                    </button>
                                 </>
                             )}
                             {selectedProject && !bulkMode && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
+                                <button
                                     onClick={() => handleCreatePrompt(selectedProject.id)}
+                                    style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                 >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    New Prompt
-                                </Button>
+                                    ➕ New Prompt
+                                </button>
                             )}
                         </div>
                     </div>
 
                     {selectedProject ? (
-                        <div className="space-y-2">
+                        <div>
                             {projectPrompts.map((prompt) => (
-                                <Card
+                                <div
                                     key={prompt.id}
-                                    className="cursor-pointer"
                                     onClick={() => {
                                         if (bulkMode) {
                                             handleBulkSelect(prompt.id);
@@ -527,21 +527,29 @@ export function ProjectBrowser() {
                                             navigate('/editor');
                                         }
                                     }}
+                                    style={{
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        marginBottom: '8px',
+                                        cursor: 'pointer',
+                                        background: selectedPrompts.has(prompt.id) ? '#f0f8ff' : 'white'
+                                    }}
                                 >
-                                    <CardContent className="p-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 flex-1">
+                                    <div style={{ padding: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
                                                 {bulkMode && (
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedPrompts.has(prompt.id)}
                                                         onChange={() => handleBulkSelect(prompt.id)}
-                                                        className="h-4 w-4"
+                                                        style={{ transform: 'scale(1.2)' }}
                                                     />
                                                 )}
-                                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                                <span>📄</span>
                                                 {editingPrompt === prompt.id ? (
-                                                    <Input
+                                                    <input
+                                                        type="text"
                                                         value={editingPromptName}
                                                         onChange={(e) => setEditingPromptName(e.target.value)}
                                                         onBlur={() => handleRenamePrompt(prompt.id, editingPromptName)}
@@ -553,48 +561,44 @@ export function ProjectBrowser() {
                                                                 setEditingPromptName('');
                                                             }
                                                         }}
-                                                        className="h-6"
+                                                        style={{ height: '24px', padding: '4px', border: '1px solid #ccc', borderRadius: '2px' }}
                                                         autoFocus
                                                     />
                                                 ) : (
                                                     <span
-                                                        className="cursor-pointer hover:text-primary"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (!bulkMode) startEditingPrompt(prompt);
                                                         }}
+                                                        style={{ cursor: 'pointer' }}
                                                     >
                                                         {prompt.name}
                                                     </span>
                                                 )}
                                             </div>
                                             {!bulkMode && (
-                                                <div className="flex gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             startEditingPrompt(prompt);
                                                         }}
+                                                        style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                                         title="Rename prompt"
                                                     >
-                                                        <Edit2 className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                        ✏️
+                                                    </button>
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleDuplicatePrompt(prompt);
                                                         }}
+                                                        style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                                         title="Duplicate prompt"
                                                     >
-                                                        <Copy className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                        📋
+                                                    </button>
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             deletePrompt(prompt.id);
@@ -608,40 +612,41 @@ export function ProjectBrowser() {
                                                                 setSelectedProject(updatedProject);
                                                             }
                                                         }}
+                                                        style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                                         title="Delete prompt"
                                                     >
                                                         ×
-                                                    </Button>
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Calendar className="h-3 w-3" />
-                                            <Typography variant="muted">{new Date(prompt.createdAt).toLocaleDateString()}</Typography>
+                                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#666' }}>
+                                            <span>📅</span>
+                                            <span>{new Date(prompt.createdAt).toLocaleDateString()}</span>
                                             {prompt.tags.length > 0 && (
                                                 <>
-                                                    <Tag className="h-3 w-3" />
-                                                    <div className="flex gap-1">
+                                                    <span>🏷️</span>
+                                                    <div style={{ display: 'flex', gap: '4px' }}>
                                                         {prompt.tags.slice(0, 2).map((tag) => (
-                                                            <Badge key={tag} variant="secondary" className="text-xs">
+                                                            <span key={tag} style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
                                                                 {tag}
-                                                            </Badge>
+                                                            </span>
                                                         ))}
                                                     </div>
                                                 </>
                                             )}
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+                                </div>
                             ))}
                             {projectPrompts.length === 0 && (
-                                <div className="text-center text-muted-foreground py-8">
+                                <div style={{ textAlign: 'center', color: '#666', padding: '32px' }}>
                                     No prompts yet. Create one to get started.
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="text-center text-muted-foreground py-8">
+                        <div style={{ textAlign: 'center', color: '#666', padding: '32px' }}>
                             Select a project to view its prompts.
                         </div>
                     )}
@@ -650,36 +655,46 @@ export function ProjectBrowser() {
 
             {/* New Project Form */}
             {showNewProjectForm && (
-                <div className="fixed inset-0 flex items-center justify-center z-50">
-                    <Card className="w-96">
-                        <CardHeader>
-                            <CardTitle>Create New Project</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Input
-                                placeholder="Project name"
-                                value={newProjectName}
-                                onChange={(e) => setNewProjectName(e.target.value)}
-                            />
-                            <Input
-                                placeholder="Tags (comma-separated)"
-                                value={newProjectTags}
-                                onChange={(e) => setNewProjectTags(e.target.value)}
-                            />
-                            <div className="flex gap-2">
-                                <Button onClick={handleCreateProject} className="flex-1">
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', zIndex: 50 }}>
+                    <div style={{ background: 'white', borderRadius: '4px', width: '384px' }}>
+                        <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Create New Project</h3>
+                        </div>
+                        <div style={{ padding: '16px' }}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Project name"
+                                    value={newProjectName}
+                                    onChange={(e) => setNewProjectName(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '16px' }}>
+                                <input
+                                    type="text"
+                                    placeholder="Tags (comma-separated)"
+                                    value={newProjectTags}
+                                    onChange={(e) => setNewProjectTags(e.target.value)}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    onClick={handleCreateProject}
+                                    style={{ flex: 1, padding: '12px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}
+                                >
                                     Create
-                                </Button>
-                                <Button
-                                    variant="outline"
+                                </button>
+                                <button
                                     onClick={() => setShowNewProjectForm(false)}
-                                    className="flex-1"
+                                    style={{ flex: 1, padding: '12px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}
                                 >
                                     Cancel
-                                </Button>
+                                </button>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             )}
 

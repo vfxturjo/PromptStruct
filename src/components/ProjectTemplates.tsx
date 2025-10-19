@@ -1,12 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Typography } from '@/components/ui/typography';
-import { Layout, Plus, X, Download, Upload, Copy, Trash2, Star } from 'lucide-react';
 
 interface ProjectTemplate {
     id: string;
@@ -306,53 +298,48 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                        <Layout className="h-5 w-5" />
-                        Project Templates
-                    </CardTitle>
-                    <div className="flex gap-2">
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+            <div style={{ background: 'white', borderRadius: '4px', width: '100%', maxWidth: '1536px', maxHeight: '90vh', overflowY: 'auto' }}>
+                <div style={{ padding: '16px', borderBottom: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        📋 Project Templates
+                    </h3>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                         <input
                             type="file"
                             accept=".json"
                             onChange={handleImportTemplate}
-                            className="hidden"
+                            style={{ display: 'none' }}
                             id="import-template"
                         />
-                        <label htmlFor="import-template">
-                            <Button variant="outline" size="sm" asChild>
-                                <span>
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Import
-                                </span>
-                            </Button>
+                        <label htmlFor="import-template" style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
+                            📤 Import
                         </label>
-                        <Button variant="outline" size="sm" onClick={() => setShowCreateForm(true)}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Template
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={onClose}>
-                            <X className="h-4 w-4" />
-                        </Button>
+                        <button onClick={() => setShowCreateForm(true)} style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
+                            ➕ Create Template
+                        </button>
+                        <button onClick={onClose} style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
+                            ×
+                        </button>
                     </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="space-y-6">
+                <div style={{ padding: '24px' }}>
                     {/* Search and Filters */}
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <Input
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+                        <div style={{ flex: 1 }}>
+                            <input
+                                type="text"
                                 placeholder="Search templates..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                             />
                         </div>
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="p-2 border rounded-md bg-background"
+                            style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                         >
                             {categories.map(category => (
                                 <option key={category} value={category}>
@@ -364,28 +351,30 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
 
                     {/* Create Template Form */}
                     {showCreateForm && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Create New Template</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="template-name">Template Name</Label>
-                                        <Input
+                        <div style={{ border: '1px solid #ccc', borderRadius: '4px', marginBottom: '24px' }}>
+                            <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
+                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Create New Template</h4>
+                            </div>
+                            <div style={{ padding: '16px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                                    <div>
+                                        <label htmlFor="template-name" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Template Name</label>
+                                        <input
                                             id="template-name"
+                                            type="text"
                                             value={newTemplate.name || ''}
                                             onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
                                             placeholder="Enter template name"
+                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="template-category">Category</Label>
+                                    <div>
+                                        <label htmlFor="template-category" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Category</label>
                                         <select
                                             id="template-category"
                                             value={newTemplate.category || 'general'}
                                             onChange={(e) => setNewTemplate(prev => ({ ...prev, category: e.target.value }))}
-                                            className="w-full p-2 border rounded-md bg-background"
+                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                                         >
                                             <option value="general">General</option>
                                             <option value="writing">Writing</option>
@@ -395,108 +384,105 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                                         </select>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="template-description">Description</Label>
-                                    <Textarea
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label htmlFor="template-description" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Description</label>
+                                    <textarea
                                         id="template-description"
                                         value={newTemplate.description || ''}
                                         onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
                                         placeholder="Describe what this template is for..."
                                         rows={3}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', resize: 'vertical' }}
                                     />
                                 </div>
-                                <div className="flex justify-end gap-2">
-                                    <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                    <button onClick={() => setShowCreateForm(false)} style={{ padding: '12px 24px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
                                         Cancel
-                                    </Button>
-                                    <Button onClick={handleCreateTemplate}>
+                                    </button>
+                                    <button onClick={handleCreateTemplate} style={{ padding: '12px 24px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}>
                                         Create Template
-                                    </Button>
+                                    </button>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     )}
 
                     {/* Templates Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
                         {filteredTemplates.map(template => (
-                            <Card key={template.id} className="relative">
-                                <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <CardTitle className="text-lg flex items-center gap-2">
+                            <div key={template.id} style={{ border: '1px solid #ccc', borderRadius: '4px', position: 'relative' }}>
+                                <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 {template.name}
                                                 {template.isBuiltIn && (
-                                                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                                    <span style={{ fontSize: '12px', color: '#ffc107' }}>⭐</span>
                                                 )}
-                                            </CardTitle>
-                                            <Typography variant="muted" className="mt-1">
+                                            </h4>
+                                            <p style={{ margin: '0 0 8px 0', color: '#666', fontSize: '14px' }}>
                                                 {template.description}
-                                            </Typography>
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        <Badge variant="outline" className="text-xs">
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                                        <span style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
                                             {template.category}
-                                        </Badge>
+                                        </span>
                                         {template.tags.slice(0, 2).map(tag => (
-                                            <Badge key={tag} variant="secondary" className="text-xs">
+                                            <span key={tag} style={{ background: '#e0e0e0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
                                                 {tag}
-                                            </Badge>
+                                            </span>
                                         ))}
                                         {template.tags.length > 2 && (
-                                            <Badge variant="secondary" className="text-xs">
+                                            <span style={{ background: '#e0e0e0', padding: '2px 6px', borderRadius: '2px', fontSize: '10px' }}>
                                                 +{template.tags.length - 2}
-                                            </Badge>
+                                            </span>
                                         )}
                                     </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-3">
-                                        <div className="text-sm text-muted-foreground">
+                                </div>
+                                <div style={{ padding: '16px' }}>
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
                                             <div>Prompts: {template.prompts.length}</div>
                                             <div>Used: {template.usageCount} times</div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => onCreateFromTemplate(template)}
-                                                className="flex-1"
-                                            >
-                                                <Copy className="h-4 w-4 mr-2" />
-                                                Use Template
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handleExportTemplate(template)}
-                                            >
-                                                <Download className="h-4 w-4" />
-                                            </Button>
-                                            {!template.isBuiltIn && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleDeleteTemplate(template.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                        </div>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                            onClick={() => onCreateFromTemplate(template)}
+                                            style={{ flex: 1, padding: '8px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}
+                                        >
+                                            📋 Use Template
+                                        </button>
+                                        <button
+                                            onClick={() => handleExportTemplate(template)}
+                                            style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                                        >
+                                            📥
+                                        </button>
+                                        {!template.isBuiltIn && (
+                                            <button
+                                                onClick={() => handleDeleteTemplate(template.id)}
+                                                style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                                            >
+                                                🗑️
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         ))}
                     </div>
 
                     {filteredTemplates.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                            <Layout className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <Typography variant="muted">No templates found matching your criteria.</Typography>
+                        <div style={{ textAlign: 'center', padding: '32px', color: '#666' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📋</div>
+                            <p style={{ margin: 0, fontSize: '14px' }}>No templates found matching your criteria.</p>
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

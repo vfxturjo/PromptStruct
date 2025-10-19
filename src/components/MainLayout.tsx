@@ -1,12 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Typography } from '@/components/ui/typography';
 import { StructuralElementCard } from './StructuralElementCard';
 import { useEditorStore } from '@/stores/editorStore';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { StructuralElement } from '@/types';
-import { Plus, ArrowLeft, Save, Download, Copy, ChevronRight, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { renderPrompt, parseControlSyntax } from '@/utils/syntaxParser';
 import { useNavigate } from 'react-router-dom';
@@ -137,70 +133,81 @@ export function MainLayout() {
     };
 
     return (
-        <div className="h-screen flex flex-col">
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
-            <header className="border-b p-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
+            <header style={{ borderBottom: '1px solid #ccc', padding: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <button
                             onClick={() => navigate('/browser')}
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                         >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Browser
-                        </Button>
+                            ← Back to Browser
+                        </button>
                         <div>
-                            <Typography variant="h1">
+                            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
                                 Project Gemini
-                            </Typography>
+                            </h1>
                             {currentProject && currentPrompt && (
-                                <Typography variant="muted">
+                                <p style={{ margin: '4px 0 0 0', color: '#666', fontSize: '14px' }}>
                                     {currentProject.name} → {currentPrompt.name}
-                                </Typography>
+                                </p>
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={handleSave}>
-                            <Save className="h-4 w-4 mr-2" />
-                            Save
-                        </Button>
-                        <Button variant="outline" size="sm">
-                            <Download className="h-4 w-4 mr-2" />
-                            Export
-                        </Button>
-                        <Button
-                            variant={previewMode === 'clean' ? 'default' : 'outline'}
-                            size="sm"
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                            onClick={handleSave}
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                        >
+                            💾 Save
+                        </button>
+                        <button
+                            style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
+                        >
+                            📥 Export
+                        </button>
+                        <button
                             onClick={() => setPreviewMode('clean')}
+                            style={{
+                                padding: '8px 16px',
+                                border: '1px solid #ccc',
+                                background: previewMode === 'clean' ? '#007bff' : 'white',
+                                color: previewMode === 'clean' ? 'white' : 'black',
+                                cursor: 'pointer'
+                            }}
                         >
                             Clean
-                        </Button>
-                        <Button
-                            variant={previewMode === 'raw' ? 'default' : 'outline'}
-                            size="sm"
+                        </button>
+                        <button
                             onClick={() => setPreviewMode('raw')}
+                            style={{
+                                padding: '8px 16px',
+                                border: '1px solid #ccc',
+                                background: previewMode === 'raw' ? '#007bff' : 'white',
+                                color: previewMode === 'raw' ? 'white' : 'black',
+                                cursor: 'pointer'
+                            }}
                         >
                             Raw
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </header>
 
             {/* Main Content */}
-            <div className="flex-1 flex">
-                <PanelGroup direction="horizontal" className="h-full">
+            <div style={{ flex: 1, display: 'flex' }}>
+                <PanelGroup direction="horizontal" style={{ height: '100%' }}>
                     {/* Structure Panel */}
                     <Panel defaultSize={30} minSize={20} maxSize={50}>
-                        <div className="h-full border-r p-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>
+                        <div style={{ height: '100%', borderRight: '1px solid #ccc', padding: '16px' }}>
+                            <div style={{ border: '1px solid #ccc', borderRadius: '4px' }}>
+                                <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
                                         Structure
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
+                                    </h3>
+                                </div>
+                                <div style={{ padding: '16px' }}>
                                     <DndContext
                                         sensors={sensors}
                                         collisionDetection={closestCenter}
@@ -209,9 +216,9 @@ export function MainLayout() {
                                         <SortableContext items={structure.map(el => el.id)} strategy={verticalListSortingStrategy}>
                                             <div>
                                                 {structure.length === 0 ? (
-                                                    <Typography variant="muted">
+                                                    <p style={{ color: '#666', margin: 0 }}>
                                                         No structural elements yet. Add one to get started.
-                                                    </Typography>
+                                                    </p>
                                                 ) : (
                                                     structure.map((element) => (
                                                         <StructuralElementCard
@@ -226,121 +233,134 @@ export function MainLayout() {
                                             </div>
                                         </SortableContext>
                                     </DndContext>
-                                    <Button className="w-full mt-4" variant="outline" onClick={handleAddElement}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add Element
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                                    <button
+                                        onClick={handleAddElement}
+                                        style={{
+                                            width: '100%',
+                                            marginTop: '16px',
+                                            padding: '12px',
+                                            border: '1px solid #ccc',
+                                            background: 'white',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        ➕ Add Element
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </Panel>
 
-                    <PanelResizeHandle className="w-2" />
+                    <PanelResizeHandle style={{ width: '8px', background: '#f0f0f0' }} />
 
                     {/* Preview Panel */}
                     <Panel defaultSize={helpPanelExpanded ? 50 : 70} minSize={30}>
-                        <div className="h-full p-4">
-                            <Card className="h-full flex flex-col">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
+                        <div style={{ height: '100%', padding: '16px' }}>
+                            <div style={{ height: '100%', border: '1px solid #ccc', borderRadius: '4px', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ padding: '16px', borderBottom: '1px solid #ccc' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
                                         Preview
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="flex-1">
-                                    <Typography variant="p" className="whitespace-pre-wrap">
+                                    </h3>
+                                </div>
+                                <div style={{ flex: 1, padding: '16px' }}>
+                                    <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
                                         {structure.length === 0 ? (
-                                            <div className="text-center py-8">
-                                                <div className="text-4xl mb-4">✨</div>
-                                                <Typography variant="p">Your rendered prompt will appear here...</Typography>
-                                                <Typography variant="small" className="mt-2">Add some elements to get started</Typography>
+                                            <div style={{ textAlign: 'center', padding: '32px' }}>
+                                                <div style={{ fontSize: '32px', marginBottom: '16px' }}>✨</div>
+                                                <p>Your rendered prompt will appear here...</p>
+                                                <small style={{ color: '#666' }}>Add some elements to get started</small>
                                             </div>
                                         ) : (
                                             renderPreview()
                                         )}
-                                    </Typography>
-                                </CardContent>
-                                <div className="p-4 border-t">
-                                    <Button
-                                        className="w-full"
+                                    </div>
+                                </div>
+                                <div style={{ padding: '16px', borderTop: '1px solid #ccc' }}>
+                                    <button
                                         onClick={handleCopyPrompt}
                                         disabled={structure.length === 0}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            border: '1px solid #ccc',
+                                            background: structure.length === 0 ? '#f5f5f5' : 'white',
+                                            cursor: structure.length === 0 ? 'not-allowed' : 'pointer'
+                                        }}
                                     >
-                                        <Copy className="h-4 w-4 mr-2" />
-                                        Copy Prompt
-                                    </Button>
+                                        📋 Copy Prompt
+                                    </button>
                                 </div>
-                            </Card>
+                            </div>
                         </div>
                     </Panel>
 
                     {/* Help Panel */}
                     {helpPanelExpanded && (
                         <>
-                            <PanelResizeHandle className="w-2" />
+                            <PanelResizeHandle style={{ width: '8px', background: '#f0f0f0' }} />
                             <Panel defaultSize={20} minSize={15} maxSize={40}>
-                                <div className="h-full border-l p-4">
-                                    <Card className="h-full">
-                                        <CardHeader className="flex flex-row items-center justify-between">
-                                            <CardTitle className="flex items-center gap-2">
+                                <div style={{ height: '100%', borderLeft: '1px solid #ccc', padding: '16px' }}>
+                                    <div style={{ height: '100%', border: '1px solid #ccc', borderRadius: '4px' }}>
+                                        <div style={{ padding: '16px', borderBottom: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
                                                 Help
-                                            </CardTitle>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
+                                            </h3>
+                                            <button
                                                 onClick={() => setHelpPanelExpanded(false)}
+                                                style={{ padding: '4px 8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                             >
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Button>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div>
-                                                <Typography variant="h4" className="mb-2">📝 Edit Elements</Typography>
-                                                <Typography variant="muted">
+                                                →
+                                            </button>
+                                        </div>
+                                        <div style={{ padding: '16px' }}>
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>📝 Edit Elements</h4>
+                                                <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
                                                     Click on any element in the left panel to edit its content.
-                                                </Typography>
+                                                </p>
                                             </div>
 
-                                            <div>
-                                                <Typography variant="h4" className="mb-2">🎛️ Control Syntax</Typography>
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>🎛️ Control Syntax</h4>
                                                 <div>
-                                                    <div>
-                                                        <Typography variant="inlineCode">{'{{text:Name:Default}}'}</Typography>
-                                                        <Typography variant="muted" className="ml-1">→ Text input</Typography>
+                                                    <div style={{ marginBottom: '4px' }}>
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{text:Name:Default}}'}</code>
+                                                        <span style={{ color: '#666', marginLeft: '4px' }}>→ Text input</span>
                                                     </div>
-                                                    <div>
-                                                        <Typography variant="inlineCode">{'{{select:Name:Option1|Option2}}'}</Typography>
-                                                        <Typography variant="muted" className="ml-1">→ Dropdown</Typography>
+                                                    <div style={{ marginBottom: '4px' }}>
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{select:Name:Option1|Option2}}'}</code>
+                                                        <span style={{ color: '#666', marginLeft: '4px' }}>→ Dropdown</span>
                                                     </div>
-                                                    <div>
-                                                        <Typography variant="inlineCode">{'{{slider:Name:50}}'}</Typography>
-                                                        <Typography variant="muted" className="ml-1">→ Slider</Typography>
+                                                    <div style={{ marginBottom: '4px' }}>
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{slider:Name:50}}'}</code>
+                                                        <span style={{ color: '#666', marginLeft: '4px' }}>→ Slider</span>
                                                     </div>
-                                                    <div>
-                                                        <Typography variant="inlineCode">{'{{toggle:Name}}...{{/toggle:Name}}'}</Typography>
-                                                        <Typography variant="muted" className="ml-1">→ Toggle block</Typography>
+                                                    <div style={{ marginBottom: '4px' }}>
+                                                        <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>{'{{toggle:Name}}...{{/toggle:Name}}'}</code>
+                                                        <span style={{ color: '#666', marginLeft: '4px' }}>→ Toggle block</span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <Typography variant="h4" className="mb-2">⌨️ Shortcuts</Typography>
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>⌨️ Shortcuts</h4>
                                                 <div>
-                                                    <div><Typography variant="inlineCode">Ctrl+N</Typography> Add element</div>
-                                                    <div><Typography variant="inlineCode">Ctrl+S</Typography> Save</div>
-                                                    <div><Typography variant="inlineCode">Ctrl+C</Typography> Copy prompt</div>
-                                                    <div><Typography variant="inlineCode">Escape</Typography> Back to browser</div>
+                                                    <div><code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>Ctrl+N</code> Add element</div>
+                                                    <div><code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>Ctrl+S</code> Save</div>
+                                                    <div><code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>Ctrl+C</code> Copy prompt</div>
+                                                    <div><code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '2px' }}>Escape</code> Back to browser</div>
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <Typography variant="h4" className="mb-2">🔄 Preview Modes</Typography>
+                                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>🔄 Preview Modes</h4>
                                                 <div>
-                                                    <div><Typography variant="large">Clean:</Typography> Final prompt with values</div>
-                                                    <div><Typography variant="large">Raw:</Typography> Prompt with {'{{...}}'} syntax</div>
+                                                    <div><strong>Clean:</strong> Final prompt with values</div>
+                                                    <div><strong>Raw:</strong> Prompt with {'{{...}}'} syntax</div>
                                                 </div>
                                             </div>
-                                        </CardContent>
-                                    </Card>
+                                        </div>
+                                    </div>
                                 </div>
                             </Panel>
                         </>
@@ -349,14 +369,13 @@ export function MainLayout() {
 
                 {/* Help Panel Toggle (when collapsed) */}
                 {!helpPanelExpanded && (
-                    <div className="absolute right-4 top-1/2">
-                        <Button
-                            variant="outline"
-                            size="sm"
+                    <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }}>
+                        <button
                             onClick={() => setHelpPanelExpanded(true)}
+                            style={{ padding: '8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                         >
-                            <HelpCircle className="h-4 w-4" />
-                        </Button>
+                            ❓
+                        </button>
                     </div>
                 )}
             </div>

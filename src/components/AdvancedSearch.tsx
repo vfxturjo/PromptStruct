@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Typography } from '@/components/ui/typography';
 import { Project, Prompt } from '@/types';
-import { Search, Filter, X, Tag, Calendar, Save, History } from 'lucide-react';
 
 interface SearchFilters {
     query: string;
@@ -194,81 +186,76 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                        <Search className="h-5 w-5" />
-                        Advanced Search
-                    </CardTitle>
-                    <Button variant="ghost" size="sm" onClick={onClose}>
-                        <X className="h-4 w-4" />
-                    </Button>
-                </CardHeader>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+            <div style={{ background: 'white', borderRadius: '4px', width: '100%', maxWidth: '1024px', maxHeight: '90vh', overflowY: 'auto' }}>
+                <div style={{ padding: '16px', borderBottom: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        🔍 Advanced Search
+                    </h3>
+                    <button onClick={onClose} style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
+                        ×
+                    </button>
+                </div>
 
-                <CardContent className="space-y-6">
+                <div style={{ padding: '24px' }}>
                     {/* Search Query */}
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="search-query">Search Query</Label>
-                            <div className="flex gap-2">
-                                <Input
+                    <div style={{ marginBottom: '24px' }}>
+                        <div style={{ marginBottom: '16px' }}>
+                            <label htmlFor="search-query" style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Search Query</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <input
                                     id="search-query"
+                                    type="text"
                                     value={filters.query}
                                     onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
                                     placeholder="Search projects and prompts..."
                                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                 />
-                                <Button onClick={handleSearch}>
-                                    <Search className="h-4 w-4" />
-                                </Button>
+                                <button onClick={handleSearch} style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
+                                    🔍
+                                </button>
                             </div>
                         </div>
 
                         {/* Search History */}
                         {searchHistory.length > 0 && (
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    <History className="h-4 w-4" />
-                                    Recent Searches
-                                </Label>
-                                <div className="flex flex-wrap gap-2">
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                                    📜 Recent Searches
+                                </label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                     {searchHistory.map((query, index) => (
-                                        <Badge
+                                        <span
                                             key={index}
-                                            variant="outline"
-                                            className="cursor-pointer hover:bg-muted"
                                             onClick={() => handleHistoryClick(query)}
+                                            style={{ background: '#f0f0f0', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
                                         >
                                             {query}
-                                        </Badge>
+                                        </span>
                                     ))}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <Separator />
+                    <hr style={{ border: 'none', borderTop: '1px solid #ccc', margin: '24px 0' }} />
 
                     {/* Filters */}
-                    <div className="space-y-4">
-                        <Typography variant="h3" className="text-lg font-medium flex items-center gap-2">
-                            <Filter className="h-5 w-5" />
-                            Filters
-                        </Typography>
+                    <div style={{ marginBottom: '24px' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            🔧 Filters
+                        </h4>
 
                         {/* Tags Filter */}
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-2">
-                                <Tag className="h-4 w-4" />
-                                Tags
-                            </Label>
-                            <div className="flex flex-wrap gap-2">
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                                🏷️ Tags
+                            </label>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 {allTags.map(tag => (
-                                    <Badge
+                                    <span
                                         key={tag}
-                                        variant={filters.tags.includes(tag) ? "default" : "outline"}
-                                        className="cursor-pointer"
                                         onClick={() => {
                                             setFilters(prev => ({
                                                 ...prev,
@@ -277,52 +264,61 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                                                     : [...prev.tags, tag]
                                             }));
                                         }}
+                                        style={{
+                                            background: filters.tags.includes(tag) ? '#007bff' : '#f0f0f0',
+                                            color: filters.tags.includes(tag) ? 'white' : 'black',
+                                            padding: '4px 8px',
+                                            borderRadius: '4px',
+                                            fontSize: '12px',
+                                            cursor: 'pointer'
+                                        }}
                                     >
                                         {tag}
-                                    </Badge>
+                                    </span>
                                 ))}
                             </div>
                         </div>
 
                         {/* Date Range */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    Start Date
-                                </Label>
-                                <Input
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                                    📅 Start Date
+                                </label>
+                                <input
                                     type="date"
                                     value={filters.dateRange.start}
                                     onChange={(e) => setFilters(prev => ({
                                         ...prev,
                                         dateRange: { ...prev.dateRange, start: e.target.value }
                                     }))}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>End Date</Label>
-                                <Input
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>End Date</label>
+                                <input
                                     type="date"
                                     value={filters.dateRange.end}
                                     onChange={(e) => setFilters(prev => ({
                                         ...prev,
                                         dateRange: { ...prev.dateRange, end: e.target.value }
                                     }))}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                 />
                             </div>
                         </div>
 
                         {/* Project Type */}
-                        <div className="space-y-2">
-                            <Label>Project Type</Label>
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Project Type</label>
                             <select
                                 value={filters.projectType}
                                 onChange={(e) => setFilters(prev => ({
                                     ...prev,
                                     projectType: e.target.value as 'all' | 'recent' | 'tagged'
                                 }))}
-                                className="w-full p-2 border rounded-md bg-background"
+                                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                             >
                                 <option value="all">All Projects</option>
                                 <option value="recent">Recent (Last 7 days)</option>
@@ -331,31 +327,31 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                         </div>
 
                         {/* Sort Options */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Sort By</Label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Sort By</label>
                                 <select
                                     value={filters.sortBy}
                                     onChange={(e) => setFilters(prev => ({
                                         ...prev,
                                         sortBy: e.target.value as 'name' | 'date' | 'tags'
                                     }))}
-                                    className="w-full p-2 border rounded-md bg-background"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                                 >
                                     <option value="name">Name</option>
                                     <option value="date">Date Created</option>
                                     <option value="tags">Number of Tags</option>
                                 </select>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Sort Order</Label>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>Sort Order</label>
                                 <select
                                     value={filters.sortOrder}
                                     onChange={(e) => setFilters(prev => ({
                                         ...prev,
                                         sortOrder: e.target.value as 'asc' | 'desc'
                                     }))}
-                                    className="w-full p-2 border rounded-md bg-background"
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
                                 >
                                     <option value="asc">Ascending</option>
                                     <option value="desc">Descending</option>
@@ -364,82 +360,79 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                         </div>
                     </div>
 
-                    <Separator />
+                    <hr style={{ border: 'none', borderTop: '1px solid #ccc', margin: '24px 0' }} />
 
                     {/* Saved Searches */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <Typography variant="h3" className="text-lg font-medium">Saved Searches</Typography>
-                            <Button
-                                variant="outline"
-                                size="sm"
+                    <div style={{ marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Saved Searches</h4>
+                            <button
                                 onClick={() => setShowSavedSearches(!showSavedSearches)}
+                                style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                             >
                                 {showSavedSearches ? 'Hide' : 'Show'}
-                            </Button>
+                            </button>
                         </div>
 
                         {showSavedSearches && (
-                            <div className="space-y-4">
+                            <div>
                                 {/* Save Current Search */}
-                                <div className="flex gap-2">
-                                    <Input
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                                    <input
+                                        type="text"
                                         placeholder="Name for this search..."
                                         value={newSearchName}
                                         onChange={(e) => setNewSearchName(e.target.value)}
+                                        style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                                     />
-                                    <Button onClick={handleSaveSearch} disabled={!newSearchName.trim()}>
-                                        <Save className="h-4 w-4 mr-2" />
-                                        Save
-                                    </Button>
+                                    <button onClick={handleSaveSearch} disabled={!newSearchName.trim()} style={{ padding: '8px 16px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}>
+                                        💾 Save
+                                    </button>
                                 </div>
 
                                 {/* Saved Searches List */}
                                 {savedSearches.length > 0 ? (
-                                    <div className="space-y-2">
+                                    <div>
                                         {savedSearches.map(savedSearch => (
-                                            <div key={savedSearch.id} className="flex items-center justify-between p-2 border rounded">
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                            <div key={savedSearch.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <button
                                                         onClick={() => handleLoadSavedSearch(savedSearch)}
+                                                        style={{ padding: '4px 8px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                                     >
                                                         {savedSearch.name}
-                                                    </Button>
-                                                    <span className="text-sm text-muted-foreground">
+                                                    </button>
+                                                    <span style={{ fontSize: '12px', color: '#666' }}>
                                                         {new Date(savedSearch.createdAt).toLocaleDateString()}
                                                     </span>
                                                 </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
+                                                <button
                                                     onClick={() => handleRemoveSavedSearch(savedSearch.id)}
+                                                    style={{ padding: '4px', border: '1px solid #ccc', background: 'white', cursor: 'pointer' }}
                                                 >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
+                                                    ×
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <Typography variant="muted">No saved searches yet.</Typography>
+                                    <p style={{ color: '#666', fontSize: '14px' }}>No saved searches yet.</p>
                                 )}
                             </div>
                         )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" onClick={onClose}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '16px' }}>
+                        <button onClick={onClose} style={{ padding: '12px 24px', border: '1px solid #ccc', background: 'white', cursor: 'pointer', borderRadius: '4px' }}>
                             Close
-                        </Button>
-                        <Button onClick={handleSearch}>
-                            <Search className="h-4 w-4 mr-2" />
-                            Search
-                        </Button>
+                        </button>
+                        <button onClick={handleSearch} style={{ padding: '12px 24px', border: '1px solid #ccc', background: '#007bff', color: 'white', cursor: 'pointer', borderRadius: '4px' }}>
+                            🔍 Search
+                        </button>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

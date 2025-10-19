@@ -1,12 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { ControlPanel } from './ControlPanel';
 import { StructuralElement } from '@/types';
-import { Trash2, GripVertical } from 'lucide-react';
 import { useState } from 'react';
 
 interface StructuralElementCardProps {
@@ -44,49 +39,77 @@ export function StructuralElementCard({
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="mb-4">
-            <Card className={`${!element.enabled ? 'opacity-50' : ''}`}>
-                <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
+        <div ref={setNodeRef} style={{ ...style, marginBottom: '16px' }}>
+            <div style={{
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                opacity: !element.enabled ? 0.5 : 1
+            }}>
+                <div style={{ padding: '12px', borderBottom: '1px solid #ccc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div
                             {...attributes}
                             {...listeners}
-                            className="cursor-grab active:cursor-grabbing p-1"
+                            style={{ cursor: 'grab', padding: '4px' }}
                         >
-                            <GripVertical className="h-4 w-4 text-muted-foreground" />
+                            ⋮⋮
                         </div>
-                        <Input
+                        <input
+                            type="text"
                             value={element.name}
                             onChange={(e) => onUpdate(element.id, { name: e.target.value })}
-                            className="font-medium"
                             placeholder="Element name..."
+                            style={{
+                                flex: 1,
+                                padding: '8px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                fontWeight: 'bold'
+                            }}
                         />
-                        <Button
-                            variant={element.enabled ? "default" : "outline"}
-                            size="sm"
+                        <button
                             onClick={() => onToggle(element.id)}
+                            style={{
+                                padding: '6px 12px',
+                                border: '1px solid #ccc',
+                                background: element.enabled ? '#007bff' : 'white',
+                                color: element.enabled ? 'white' : 'black',
+                                cursor: 'pointer',
+                                borderRadius: '4px'
+                            }}
                         >
                             {element.enabled ? 'On' : 'Off'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
+                        </button>
+                        <button
                             onClick={() => onDelete(element.id)}
-                            className="text-destructive hover:text-destructive"
+                            style={{
+                                padding: '6px 12px',
+                                border: '1px solid #ccc',
+                                background: 'white',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+                                color: '#dc3545'
+                            }}
                         >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                            🗑️
+                        </button>
                     </div>
-                </CardHeader>
-                <CardContent>
-                    <Textarea
+                </div>
+                <div style={{ padding: '16px' }}>
+                    <textarea
                         value={element.content}
                         onChange={(e) => onUpdate(element.id, { content: e.target.value })}
                         placeholder="Enter your prompt content here..."
-                        className="min-h-[100px] font-mono text-sm"
                         style={{
+                            width: '100%',
+                            minHeight: '100px',
+                            padding: '8px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
                             fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-                            lineHeight: '1.5'
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            resize: 'vertical'
                         }}
                     />
                     <ControlPanel
@@ -94,8 +117,8 @@ export function StructuralElementCard({
                         controlValues={controlValues}
                         onControlChange={handleControlChange}
                     />
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }
