@@ -118,6 +118,13 @@
      */
     --field-gap: 0.25rem;
     /* .field-stack */
+
+    /*
+     * Text editor max height
+     * Where used: .text-editor-max-height (EnhancedTextarea max height)
+     */
+    --text-editor-max-height: 60vh;
+    /* .text-editor-max-height */
 }
 
 /* Removed tight/compact mode: single absolute style is used */
@@ -291,6 +298,11 @@
     .struct-card-content {
         /* Use shorthand with !important to win over library defaults */
         padding: var(--struct-card-content-pad-y, var(--card-pad)) var(--struct-card-content-pad-x, var(--card-pad)) !important;
+    }
+
+    /* Text editor max height utility */
+    .text-editor-max-height {
+        max-height: var(--text-editor-max-height);
     }
 
     /* Ensure collapsible content takes no space when closed */

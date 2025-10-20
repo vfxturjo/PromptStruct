@@ -37,7 +37,7 @@ describe('StructuralElementCard', () => {
         onToggle: vi.fn(),
         controlValues: {},
         onControlChange: vi.fn(),
-        collapsed: { text: true, controls: true },
+        collapsed: { text: false, controls: false },
         onCollapsedChange: vi.fn(),
     }
 
@@ -54,7 +54,10 @@ describe('StructuralElementCard', () => {
     it('should render element content', () => {
         render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
 
-        expect(screen.getByDisplayValue('Test content with {{text:Name:Default}}')).toBeInTheDocument()
+        // Check that the contenteditable div contains the text
+        const contentDiv = document.querySelector('[contenteditable="true"]')
+        expect(contentDiv).toBeInTheDocument()
+        expect(contentDiv?.textContent).toContain('Test content with {{text:Name:Default}}')
     })
 
     it('should show enabled state', () => {
@@ -84,8 +87,12 @@ describe('StructuralElementCard', () => {
     it('should call onUpdate when content changes', () => {
         render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
 
-        const contentInput = screen.getByDisplayValue('Test content with {{text:Name:Default}}')
-        fireEvent.change(contentInput, { target: { value: 'New content' } })
+        const contentDiv = document.querySelector('[contenteditable="true"]') as HTMLElement
+        expect(contentDiv).toBeInTheDocument()
+
+        // Simulate content change
+        contentDiv.textContent = 'New content'
+        fireEvent.input(contentDiv)
 
         expect(mockHandlers.onUpdate).toHaveBeenCalledWith('test-1', { content: 'New content' })
     })

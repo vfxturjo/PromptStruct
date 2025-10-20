@@ -19,6 +19,7 @@ interface EditorState {
     uiHelpPanelExpanded: boolean;
     uiPanelLayout?: { left: number; right: number };
     uiGlobalControlValues: Record<string, any>;
+    uiTextEditorHeight: Record<string, number>; // elementId -> height in pixels
 
     // Actions
     setPreviewMode: (mode: 'clean' | 'raw') => void;
@@ -34,6 +35,7 @@ interface EditorState {
     setUiPanelLayout: (layout: { left: number; right: number } | undefined) => void;
     setUiGlobalControlValues: (values: Record<string, any>) => void;
     setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean }>) => void;
+    setUiTextEditorHeight: (elementId: string, height: number) => void;
 
     // Project management
     addProject: (project: Project) => void;
@@ -95,6 +97,7 @@ export const useEditorStore = create<EditorState>()(
             uiHelpPanelExpanded: true,
             uiPanelLayout: undefined,
             uiGlobalControlValues: {},
+            uiTextEditorHeight: {},
 
             // Preview mode
             setPreviewMode: (mode) => set({ previewMode: mode }),
@@ -142,6 +145,10 @@ export const useEditorStore = create<EditorState>()(
             setUiPanelLayout: (layout) => set({ uiPanelLayout: layout }),
             setUiGlobalControlValues: (values) => set({ uiGlobalControlValues: values }),
             setUiCollapsedByElementId: (collapsed) => set({ uiCollapsedByElementId: collapsed }),
+            setUiTextEditorHeight: (elementId, height) =>
+                set((state) => ({
+                    uiTextEditorHeight: { ...state.uiTextEditorHeight, [elementId]: height },
+                })),
 
             // Project management
             addProject: (project) =>
@@ -263,6 +270,7 @@ export const useEditorStore = create<EditorState>()(
                 uiHelpPanelExpanded: state.uiHelpPanelExpanded,
                 uiPanelLayout: state.uiPanelLayout,
                 uiGlobalControlValues: state.uiGlobalControlValues,
+                uiTextEditorHeight: state.uiTextEditorHeight,
             }),
         }
     )

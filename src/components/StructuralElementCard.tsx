@@ -124,6 +124,7 @@ export function StructuralElementCard({
                                     onChange={(e) => onUpdate(element.id, { content: e.target.value })}
                                     placeholder="Enter your prompt content here..."
                                     className="min-h-[80px] font-mono text-sm resize-y dark:bg-neutral-900"
+                                    elementId={element.id}
                                 />
                             </CollapsibleContent>
                         </Collapsible>
