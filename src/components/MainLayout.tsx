@@ -12,7 +12,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Kbd } from '@/components/ui/kbd';
-import { ArrowLeft, Save, Download, Copy, HelpCircle, ChevronRight, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Download, Copy, HelpCircle, ChevronRight, Plus, Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 export function MainLayout() {
@@ -30,9 +30,11 @@ export function MainLayout() {
         saveCurrentPrompt,
         uiCollapsedByElementId,
         uiHelpPanelExpanded,
+        uiPreviewPanelExpanded,
         uiGlobalControlValues,
         setUiCollapsedForElement,
         setUiHelpPanelExpanded,
+        setUiPreviewPanelExpanded,
         setUiGlobalControlValues,
         projects,
         prompts,
@@ -144,6 +146,7 @@ export function MainLayout() {
                     currentProjectId: currentProject?.id || null,
                     currentPromptId: currentPrompt?.id || null,
                     helpPanelExpanded: uiHelpPanelExpanded,
+                    previewPanelExpanded: uiPreviewPanelExpanded,
                     panelLayout: uiPanelLayout,
                     collapsedByElementId: uiCollapsedByElementId,
                     globalControlValues: uiGlobalControlValues
@@ -187,9 +190,13 @@ export function MainLayout() {
             <header className="border-b spacing-header flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" onClick={() => navigate('/browser')}>
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Browser
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate('/browser')}
+                            title="Back to Browser"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
                         </Button>
                         <div>
                             <h1 className="text-2xl font-semibold">
@@ -203,13 +210,37 @@ export function MainLayout() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button onClick={handleSave}>
-                            <Save className="w-4 h-4 mr-2" />
-                            Save
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setUiPreviewPanelExpanded(!uiPreviewPanelExpanded)}
+                            title={uiPreviewPanelExpanded ? "Hide Preview Panel" : "Show Preview Panel"}
+                        >
+                            {uiPreviewPanelExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
-                        <Button variant="outline" onClick={handleExport}>
-                            <Download className="w-4 h-4 mr-2" />
-                            Export
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setUiHelpPanelExpanded(!uiHelpPanelExpanded)}
+                            title={uiHelpPanelExpanded ? "Hide Help Panel" : "Show Help Panel"}
+                        >
+                            <HelpCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSave}
+                            title="Save"
+                        >
+                            <Save className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleExport}
+                            title="Export"
+                        >
+                            <Download className="w-4 h-4" />
                         </Button>
                         <ThemeToggle />
                     </div>
@@ -220,7 +251,7 @@ export function MainLayout() {
             <div className="flex-1 overflow-hidden">
                 <PanelGroup direction="horizontal" className="h-full">
                     {/* Structure Panel */}
-                    <Panel defaultSize={30} minSize={20} maxSize={50}>
+                    <Panel defaultSize={30}>
                         <div className="h-full border-r panel-padding flex flex-col">
                             <Card className="h-full flex flex-col dark:bg-neutral-900">
                                 <CardHeader className="flex-shrink-0">
@@ -272,63 +303,66 @@ export function MainLayout() {
                         </div>
                     </Panel>
 
-                    <PanelResizeHandle className="w-2 bg-border" />
-
                     {/* Preview Panel */}
-                    <Panel defaultSize={uiHelpPanelExpanded ? 50 : 70} minSize={30}>
-                        <div className="h-full panel-padding flex flex-col">
-                            <Card className="h-full flex flex-col dark:bg-neutral-900">
-                                <CardHeader className="flex-shrink-0 flex items-center justify-between">
-                                    <h3 className="text-lg font-bold title-spacing">
-                                        Preview
-                                    </h3>
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            onClick={() => setPreviewMode('clean')}
-                                            variant={previewMode === 'clean' ? 'default' : 'outline'}
-                                        >
-                                            Clean
-                                        </Button>
-                                        <Button
-                                            onClick={() => setPreviewMode('raw')}
-                                            variant={previewMode === 'raw' ? 'default' : 'outline'}
-                                        >
-                                            Raw
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="flex-1 overflow-y-auto">
-                                    <div className="whitespace-pre-wrap font-mono text-sm">
-                                        {structure.length === 0 ? (
-                                            <div className="text-center py-8">
-                                                <div className="text-4xl mb-4">✨</div>
-                                                <p>Your rendered prompt will appear here...</p>
-                                                <small className="text-muted-foreground">Add some elements to get started</small>
+                    {uiPreviewPanelExpanded && (
+                        <>
+                            <PanelResizeHandle className="w-2 bg-border" />
+                            <Panel defaultSize={uiHelpPanelExpanded ? 50 : 70}>
+                                <div className="h-full panel-padding flex flex-col">
+                                    <Card className="h-full flex flex-col dark:bg-neutral-900">
+                                        <CardHeader className="flex-shrink-0 flex items-center justify-between">
+                                            <h3 className="text-lg font-bold title-spacing">
+                                                Preview
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    onClick={() => setPreviewMode('clean')}
+                                                    variant={previewMode === 'clean' ? 'default' : 'outline'}
+                                                >
+                                                    Clean
+                                                </Button>
+                                                <Button
+                                                    onClick={() => setPreviewMode('raw')}
+                                                    variant={previewMode === 'raw' ? 'default' : 'outline'}
+                                                >
+                                                    Raw
+                                                </Button>
                                             </div>
-                                        ) : (
-                                            renderPreview()
-                                        )}
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="flex-shrink-0">
-                                    <Button
-                                        onClick={handleCopyPrompt}
-                                        disabled={structure.length === 0}
-                                        className="w-full"
-                                    >
-                                        <Copy className="w-4 h-4 mr-2" />
-                                        Copy Prompt
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        </div>
-                    </Panel>
+                                        </CardHeader>
+                                        <CardContent className="flex-1 overflow-y-auto">
+                                            <div className="whitespace-pre-wrap font-mono text-sm">
+                                                {structure.length === 0 ? (
+                                                    <div className="text-center py-8">
+                                                        <div className="text-4xl mb-4">✨</div>
+                                                        <p>Your rendered prompt will appear here...</p>
+                                                        <small className="text-muted-foreground">Add some elements to get started</small>
+                                                    </div>
+                                                ) : (
+                                                    renderPreview()
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                        <CardFooter className="flex-shrink-0">
+                                            <Button
+                                                onClick={handleCopyPrompt}
+                                                disabled={structure.length === 0}
+                                                className="w-full"
+                                            >
+                                                <Copy className="w-4 h-4 mr-2" />
+                                                Copy Prompt
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                </div>
+                            </Panel>
+                        </>
+                    )}
 
                     {/* Help Panel */}
                     {uiHelpPanelExpanded && (
                         <>
                             <PanelResizeHandle className="w-2 bg-border" />
-                            <Panel defaultSize={20} minSize={15} maxSize={40}>
+                            <Panel defaultSize={20}>
                                 <div className="h-full border-l panel-padding flex flex-col">
                                     <Card className="h-full flex flex-col dark:bg-neutral-900">
                                         <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
@@ -413,18 +447,6 @@ export function MainLayout() {
                     )}
                 </PanelGroup>
 
-                {/* Help Panel Toggle (when collapsed) */}
-                {!uiHelpPanelExpanded && (
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setUiHelpPanelExpanded(true)}
-                        >
-                            <HelpCircle className="w-4 h-4" />
-                        </Button>
-                    </div>
-                )}
             </div>
         </div>
     );

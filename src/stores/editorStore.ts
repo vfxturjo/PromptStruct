@@ -17,6 +17,7 @@ interface EditorState {
     // UI state (persisted)
     uiCollapsedByElementId: Record<string, { text: boolean; controls: boolean }>;
     uiHelpPanelExpanded: boolean;
+    uiPreviewPanelExpanded: boolean;
     uiPanelLayout?: { left: number; right: number };
     uiGlobalControlValues: Record<string, any>;
     uiTextEditorHeight: Record<string, number>; // elementId -> height in pixels
@@ -32,6 +33,7 @@ interface EditorState {
     // UI actions
     setUiCollapsedForElement: (id: string, collapsed: { text: boolean; controls: boolean }) => void;
     setUiHelpPanelExpanded: (expanded: boolean) => void;
+    setUiPreviewPanelExpanded: (expanded: boolean) => void;
     setUiPanelLayout: (layout: { left: number; right: number } | undefined) => void;
     setUiGlobalControlValues: (values: Record<string, any>) => void;
     setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean }>) => void;
@@ -95,6 +97,7 @@ export const useEditorStore = create<EditorState>()(
             versions: [],
             uiCollapsedByElementId: {},
             uiHelpPanelExpanded: true,
+            uiPreviewPanelExpanded: true,
             uiPanelLayout: undefined,
             uiGlobalControlValues: {},
             uiTextEditorHeight: {},
@@ -142,6 +145,7 @@ export const useEditorStore = create<EditorState>()(
                     uiCollapsedByElementId: { ...state.uiCollapsedByElementId, [id]: collapsed },
                 })),
             setUiHelpPanelExpanded: (expanded) => set({ uiHelpPanelExpanded: expanded }),
+            setUiPreviewPanelExpanded: (expanded) => set({ uiPreviewPanelExpanded: expanded }),
             setUiPanelLayout: (layout) => set({ uiPanelLayout: layout }),
             setUiGlobalControlValues: (values) => set({ uiGlobalControlValues: values }),
             setUiCollapsedByElementId: (collapsed) => set({ uiCollapsedByElementId: collapsed }),
@@ -268,6 +272,7 @@ export const useEditorStore = create<EditorState>()(
                 currentPrompt: state.currentPrompt,
                 uiCollapsedByElementId: state.uiCollapsedByElementId,
                 uiHelpPanelExpanded: state.uiHelpPanelExpanded,
+                uiPreviewPanelExpanded: state.uiPreviewPanelExpanded,
                 uiPanelLayout: state.uiPanelLayout,
                 uiGlobalControlValues: state.uiGlobalControlValues,
                 uiTextEditorHeight: state.uiTextEditorHeight,
