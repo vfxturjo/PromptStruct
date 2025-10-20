@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Kbd } from '@/components/ui/kbd';
 import { ArrowLeft, Save, Download, Copy, HelpCircle, ChevronRight, Plus } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 export function MainLayout() {
     const {
@@ -182,6 +183,7 @@ export function MainLayout() {
                         >
                             Raw
                         </Button>
+                        <ThemeToggle />
                     </div>
                 </div>
             </header>

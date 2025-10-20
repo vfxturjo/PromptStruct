@@ -35,6 +35,8 @@ describe('StructuralElementCard', () => {
         onUpdate: vi.fn(),
         onDelete: vi.fn(),
         onToggle: vi.fn(),
+        controlValues: {},
+        onControlChange: vi.fn(),
     }
 
     beforeEach(() => {

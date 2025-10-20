@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { parseControlSyntax } from '@/utils/syntaxParser';
 
@@ -19,7 +19,7 @@ const CONTROL_TEMPLATES = {
 export function EnhancedTextarea({ value, onChange, placeholder, className }: EnhancedTextareaProps) {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0 });
-    const [currentWord, setCurrentWord] = useState('');
+    const [, setCurrentWord] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Ensure value is always a string

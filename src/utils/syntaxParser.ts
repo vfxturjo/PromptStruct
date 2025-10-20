@@ -89,10 +89,11 @@ export function parseControlSyntax(content: string): ParsedControl[] {
             // Parse only non-toggle controls inside the toggle content
             let match;
             const regex = /\{\{([^:}]+):([^:}]+)(?::([^}]*?))?\}\}/g;
-            const toggleContent = toggleControl.content;
+            const toggleContent = toggleControl.content || '';
 
             while ((match = regex.exec(toggleContent)) !== null) {
-                const [fullMatch, type, name, defaultValue] = match;
+                if (!match.index) continue;
+                const [fullMatch, type, name, defaultValue = ''] = match;
                 const startIndex = match.index;
                 const endIndex = startIndex + fullMatch.length;
 
@@ -193,9 +194,9 @@ export function renderPrompt(
                     const relativeStart = nestedControl.startIndex - control.startIndex;
                     const relativeEnd = nestedControl.endIndex - control.startIndex;
 
-                    processedContent = processedContent.slice(0, relativeStart) +
+                    processedContent = (processedContent || '').slice(0, relativeStart) +
                         replacement +
-                        processedContent.slice(relativeEnd);
+                        (processedContent || '').slice(relativeEnd);
                 }
 
                 result = result.slice(0, control.startIndex) +

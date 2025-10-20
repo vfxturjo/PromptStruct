@@ -2,14 +2,14 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { App } from './App.tsx'
 import { Toaster } from '@/components/ui/sonner'
-import './index.css'
-
-// Apply dark theme to the html element
-document.documentElement.classList.add('dark')
+import { ThemeProvider } from './components/theme-provider'
+import './globals.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <App />
-        <Toaster />
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <App />
+            <Toaster />
+        </ThemeProvider>
     </React.StrictMode>,
 )
