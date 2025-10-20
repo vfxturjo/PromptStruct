@@ -40,11 +40,16 @@ export function parseControlSyntax(content: string): ParsedControl[] {
         const startIndex = match.index;
         const endIndex = startIndex + fullMatch.length;
 
+        // Skip toggle opening tags; toggles are handled separately above
+        if (type.trim() === 'toggle') {
+            continue;
+        }
+
         // Skip if this is already captured as part of a toggle
         const isInsideToggle = controls.some(control =>
             control.element.type === 'toggle' &&
-            startIndex > control.startIndex &&
-            endIndex < control.endIndex
+            startIndex >= control.startIndex &&
+            endIndex <= control.endIndex
         );
 
         if (isInsideToggle) continue;
@@ -136,8 +141,7 @@ export function parseControlSyntax(content: string): ParsedControl[] {
         }
     }
 
-    // Add nested controls to main controls
-    controls.push(...nestedControls);
+    // Do not add nested controls to the returned list; they are used only during rendering
 
     // Remove duplicates and sort by start index
     const uniqueControls = controls.filter((control, index, self) => {

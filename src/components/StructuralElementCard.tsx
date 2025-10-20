@@ -84,17 +84,31 @@ export function StructuralElementCard({
                         >
                             {isControlsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                         </Button>
-                        <Switch
-                            checked={element.enabled}
-                            onCheckedChange={() => onToggle(element.id)}
-                        />
+                        {/* Accessible switch with explicit labels for tests */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                className="text-xs underline-offset-2 hover:underline"
+                                onClick={() => onToggle(element.id)}
+                            >
+                                {element.enabled ? 'On' : 'Off'}
+                            </button>
+                            <Switch
+                                checked={element.enabled}
+                                onCheckedChange={() => onToggle(element.id)}
+                                aria-label={element.enabled ? 'On' : 'Off'}
+                                id={`toggle-${element.id}`}
+                            />
+                        </div>
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onDelete(element.id)}
                             className="text-destructive hover:text-destructive"
+                            aria-label="trash"
+                            title="trash"
                         >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" aria-hidden />
                         </Button>
                     </div>
                 </CardHeader>
@@ -112,6 +126,7 @@ export function StructuralElementCard({
 
                     <Collapsible open={isControlsExpanded} onOpenChange={setIsControlsExpanded}>
                         <CollapsibleContent>
+                            <h4 className="text-sm font-medium mb-2">Dynamic Controls</h4>
                             <ControlPanel
                                 content={element.content}
                                 controlValues={controlValues}

@@ -21,6 +21,7 @@ export function EnhancedTextarea({ value, onChange, placeholder, className }: En
     const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0 });
     const [, setCurrentWord] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const overlayRef = useRef<HTMLDivElement>(null);
 
     // Ensure value is always a string
     const safeValue = value || '';
@@ -75,6 +76,15 @@ export function EnhancedTextarea({ value, onChange, placeholder, className }: En
             } else {
                 setShowSuggestions(false);
             }
+        }
+    };
+
+    const handleScroll = () => {
+        const textarea = textareaRef.current;
+        const overlay = overlayRef.current;
+        if (textarea && overlay) {
+            overlay.scrollTop = textarea.scrollTop;
+            overlay.scrollLeft = textarea.scrollLeft;
         }
     };
 
@@ -159,6 +169,7 @@ export function EnhancedTextarea({ value, onChange, placeholder, className }: En
                     ref={textareaRef}
                     value={safeValue}
                     onChange={handleTextChange}
+                    onScroll={handleScroll}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     className={`${className} ${controls.length > 0 ? 'ring-1 ring-blue-200 dark:ring-blue-800' : ''} bg-transparent relative z-10`}
@@ -173,7 +184,8 @@ export function EnhancedTextarea({ value, onChange, placeholder, className }: En
 
                 {/* Syntax highlighting overlay */}
                 <div
-                    className="absolute inset-0 pointer-events-none font-mono text-sm whitespace-pre-wrap break-words overflow-hidden border border-input rounded-md bg-background"
+                    ref={overlayRef}
+                    className="absolute inset-0 pointer-events-none font-mono text-sm whitespace-pre-wrap break-words overflow-auto border border-input rounded-md bg-background no-scrollbar"
                     style={{
                         padding: '0.5rem',
                         margin: 0,

@@ -92,9 +92,9 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="space-y-4 py-3">
                     {/* Basic Information */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         <h4 className="text-lg font-semibold">Basic Information</h4>
 
                         <div className="space-y-2">
@@ -156,7 +156,7 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
                     <Separator />
 
                     {/* Default Template */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         <h4 className="text-lg font-semibold">Default Prompt Template</h4>
                         <div className="space-y-2">
                             <Label htmlFor="default-template">Template Content</Label>
@@ -177,10 +177,10 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
                     <Separator />
 
                     {/* Settings */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         <h4 className="text-lg font-semibold">Project Settings</h4>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <Label>Auto-save</Label>

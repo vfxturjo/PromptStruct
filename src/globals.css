@@ -23,6 +23,32 @@
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
     --radius: 0.625rem;
+
+    /* Layout spacing knobs (edit these only to change targeted spacing) */
+    --layout-header-padding: 0.25rem;
+    /* header padding */
+    --layout-header-padding-tight: 0.15rem;
+    --layout-panel-padding: 0.25rem;
+    /* panel/container padding */
+    --layout-panel-padding-tight: 0.15rem;
+    --layout-title-margin-bottom: 0.15rem;
+    /* spacing below titles */
+    --layout-stack-gap: 0.15rem;
+    /* vertical stack gap */
+    --layout-stack-gap-relaxed: 0.15rem;
+    --layout-grid-gap: 0.15rem;
+    /* grid gap */
+    --layout-grid-gap-relaxed: 0.5rem;
+    --layout-vertical-pad-3: 0.5rem;
+    /* block padding helpers */
+    --layout-vertical-pad-4: 0.5rem;
+}
+
+.tight,
+html.tight {
+    /* When tight mode is enabled globally, swap to tight paddings */
+    --layout-header-padding: var(--layout-header-padding-tight);
+    --layout-panel-padding: var(--layout-panel-padding-tight);
 }
 
 .dark {
@@ -54,5 +80,99 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Scrollbars (Firefox) */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--input) transparent;
+    }
+
+    /* Scrollbars (WebKit) */
+    *::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: var(--muted);
+        border-radius: 9999px;
+        border: 3px solid transparent;
+        /* creates inset look */
+        background-clip: padding-box;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: var(--accent);
+    }
+
+    /* Utility: hide scrollbars (keeps programmatic scrolling) */
+    .no-scrollbar {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Spacing utility classes wired to layout variables above */
+    .spacing-header {
+        padding: var(--layout-header-padding);
+    }
+
+    .spacing-header-tight {
+        padding: var(--layout-header-padding-tight);
+    }
+
+    .panel-padding {
+        padding: var(--layout-panel-padding);
+    }
+
+    .panel-padding-tight {
+        padding: var(--layout-panel-padding-tight);
+    }
+
+    .title-spacing {
+        margin-bottom: var(--layout-title-margin-bottom);
+    }
+
+    .stack-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-stack-gap);
+    }
+
+    .stack-section-relaxed {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-stack-gap-relaxed);
+    }
+
+    .grid-gap {
+        gap: var(--layout-grid-gap);
+    }
+
+    .grid-gap-relaxed {
+        gap: var(--layout-grid-gap-relaxed);
+    }
+
+    .vpad-3 {
+        padding-block: var(--layout-vertical-pad-3);
+    }
+
+    .vpad-4 {
+        padding-block: var(--layout-vertical-pad-4);
     }
 }

@@ -310,11 +310,11 @@ export function ProjectBrowser() {
     };
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold">
+            <div className="spacing-header border-b">
+                <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-2xl font-semibold">
                         Project Browser
                     </h2>
                     <div className="flex gap-2">
@@ -372,18 +372,17 @@ export function ProjectBrowser() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 flex">
+            <div className="flex-1 flex overflow-hidden">
                 {/* Projects List */}
-                <div className="w-1/2 border-r p-4">
-                    <h3 className="text-lg font-bold mb-3">Projects</h3>
+                <div className="w-1/2 border-r panel-padding overflow-y-auto">
+                    <h3 className="text-lg font-semibold mb-2">Projects</h3>
                     <div className="space-y-2">
                         {filteredProjects.map((project) => (
                             <Card
                                 key={project.id}
                                 onClick={() => setSelectedProject(project)}
-                                className={`cursor-pointer transition-colors ${
-                                    selectedProject?.id === project.id ? 'bg-accent' : ''
-                                }`}
+                                className={`cursor-pointer transition-colors ${selectedProject?.id === project.id ? 'bg-accent' : ''
+                                    }`}
                             >
                                 <CardContent className="p-3">
                                     <div className="flex items-center justify-between">
@@ -456,9 +455,9 @@ export function ProjectBrowser() {
                 </div>
 
                 {/* Prompts List */}
-                <div className="w-1/2 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-bold">
+                <div className="w-1/2 panel-padding overflow-y-auto">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold">
                             {selectedProject ? `${selectedProject.name} - Prompts` : 'Select a Project'}
                             {bulkMode && selectedPrompts.size > 0 && (
                                 <span className="text-xs text-muted-foreground ml-2">
@@ -501,9 +500,8 @@ export function ProjectBrowser() {
                                             navigate('/editor');
                                         }
                                     }}
-                                    className={`cursor-pointer transition-colors ${
-                                        selectedPrompts.has(prompt.id) ? 'bg-accent' : ''
-                                    }`}
+                                    className={`cursor-pointer transition-colors ${selectedPrompts.has(prompt.id) ? 'bg-accent' : ''
+                                        }`}
                                 >
                                     <CardContent className="p-3">
                                         <div className="flex items-center justify-between">

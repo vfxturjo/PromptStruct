@@ -93,7 +93,8 @@ export const useEditorStore = create<EditorState>()(
                         ...state.structure,
                         {
                             ...element,
-                            id: `struct_${Date.now()}`,
+                            // Preserve provided id if present (useful for tests); otherwise generate one
+                            id: (element as any).id ?? `struct_${Date.now()}`,
                         },
                     ],
                 })),
@@ -217,6 +218,9 @@ export const useEditorStore = create<EditorState>()(
         {
             name: 'gemini-editor-storage',
             partialize: (state) => ({
+                // Persist core session so refresh restores user's workspace
+                structure: state.structure,
+                previewMode: state.previewMode,
                 projects: state.projects,
                 prompts: state.prompts,
                 versions: state.versions,

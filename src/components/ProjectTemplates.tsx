@@ -292,9 +292,9 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="stack-section vpad-3">
                     {/* Search and Filters */}
-                    <div className="flex gap-4">
+                    <div className="flex grid-gap">
                         <div className="flex-1">
                             <Input
                                 type="text"
@@ -304,7 +304,7 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                             />
                         </div>
                         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="w-48">
+                            <SelectTrigger className="w-44">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -325,13 +325,13 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                                 {showCreateForm ? 'Hide Create Form' : 'Create New Template'}
                             </Button>
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-4">
+                        <CollapsibleContent className="mt-3">
                             <Card>
                                 <CardHeader>
                                     <h4 className="text-lg font-semibold">Create New Template</h4>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
+                                <CardContent className="stack-section">
+                                    <div className="grid grid-cols-2 grid-gap">
                                         <div className="space-y-2">
                                             <Label htmlFor="template-name">Template Name</Label>
                                             <Input
@@ -385,7 +385,7 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                     </Collapsible>
 
                     {/* Templates Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-gap">
                         {filteredTemplates.map(template => (
                             <Card key={template.id} className="relative">
                                 <CardHeader>

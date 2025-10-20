@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { Kbd } from '@/components/ui/kbd';
 import { ArrowLeft, Save, Download, Copy, HelpCircle, ChevronRight, Plus } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { CompactToggle } from './CompactToggle';
 
 export function MainLayout() {
     const {
@@ -142,9 +143,9 @@ export function MainLayout() {
     };
 
     return (
-        <div className="h-screen flex flex-col overflow-hidden">
+        <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
             {/* Header */}
-            <header className="border-b p-4 flex-shrink-0">
+            <header className="border-b spacing-header flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" onClick={() => navigate('/browser')}>
@@ -152,7 +153,7 @@ export function MainLayout() {
                             Back to Browser
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold">
+                            <h1 className="text-2xl font-semibold">
                                 Project Gemini
                             </h1>
                             {currentProject && currentPrompt && (
@@ -183,6 +184,7 @@ export function MainLayout() {
                         >
                             Raw
                         </Button>
+                        <CompactToggle />
                         <ThemeToggle />
                     </div>
                 </div>

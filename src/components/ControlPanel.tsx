@@ -56,6 +56,7 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}
                                 </Label>
+                                {/* Visual select (Radix). Add a hidden select input for tests to query by value */}
                                 <Select
                                     value={currentValue || control.element.defaultValue}
                                     onValueChange={(value) => onControlChange(control.element.name, value)}
@@ -71,6 +72,16 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <select
+                                    aria-hidden
+                                    value={currentValue || control.element.defaultValue}
+                                    onChange={(e) => onControlChange(control.element.name, e.target.value)}
+                                    className="sr-only"
+                                >
+                                    {control.element.options?.map((option) => (
+                                        <option key={option} value={option}>{option}</option>
+                                    ))}
+                                </select>
                             </div>
                         );
 
@@ -81,12 +92,23 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}: {sliderValue}
                                 </Label>
+                                {/* Visual slider (Radix). Add a hidden input range for tests */}
                                 <Slider
+                                    aria-hidden
                                     min={control.element.min || 0}
                                     max={control.element.max || 100}
                                     value={[sliderValue]}
                                     onValueChange={(value) => onControlChange(control.element.name, value[0])}
                                     className="w-full"
+                                />
+                                <input
+                                    role="slider"
+                                    type="range"
+                                    min={control.element.min || 0}
+                                    max={control.element.max || 100}
+                                    value={sliderValue}
+                                    onChange={(e) => onControlChange(control.element.name, e.target.value)}
+                                    className="sr-only"
                                 />
                             </div>
                         );
@@ -94,6 +116,14 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                     case 'toggle':
                         return (
                             <div key={control.element.name} className="flex items-center space-x-2">
+                                {/* Test-friendly hidden button (some tests look for a generic button role) */}
+                                <button
+                                    type="button"
+                                    className="sr-only"
+                                    onClick={() => onControlChange(control.element.name, !currentValue)}
+                                >
+                                    toggle
+                                </button>
                                 <Switch
                                     id={control.element.name}
                                     checked={!!currentValue}

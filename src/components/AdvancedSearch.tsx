@@ -205,12 +205,12 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
+                <div className="stack-section vpad-3">
                     {/* Search Query */}
-                    <div className="space-y-4">
+                    <div className="stack-section">
                         <div className="space-y-2">
                             <Label htmlFor="search-query">Search Query</Label>
-                            <div className="flex gap-2">
+                            <div className="flex grid-gap">
                                 <Input
                                     id="search-query"
                                     type="text"
@@ -233,7 +233,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                                     <Calendar className="w-4 h-4" />
                                     Recent Searches
                                 </Label>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap grid-gap">
                                     {searchHistory.map((query, index) => (
                                         <Badge
                                             key={index}
@@ -252,7 +252,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                     <Separator />
 
                     {/* Filters */}
-                    <div className="space-y-4">
+                    <div className="stack-section">
                         <h4 className="text-lg font-semibold flex items-center gap-2">
                             <Tag className="w-5 h-5" />
                             Filters
@@ -264,7 +264,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                                 <Tag className="w-4 h-4" />
                                 Tags
                             </Label>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap grid-gap">
                                 {allTags.map(tag => (
                                     <Badge
                                         key={tag}
@@ -286,7 +286,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                         </div>
 
                         {/* Date Range */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 grid-gap">
                             <div className="space-y-2">
                                 <Label htmlFor="start-date" className="flex items-center gap-2">
                                     <Calendar className="w-4 h-4" />
@@ -338,7 +338,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                         </div>
 
                         {/* Sort Options */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 grid-gap">
                             <div className="space-y-2">
                                 <Label htmlFor="sort-by">Sort By</Label>
                                 <Select
@@ -382,7 +382,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                     <Separator />
 
                     {/* Saved Searches */}
-                    <div className="space-y-4">
+                    <div className="stack-section">
                         <div className="flex items-center justify-between">
                             <h4 className="text-lg font-semibold">Saved Searches</h4>
                             <Collapsible open={showSavedSearches} onOpenChange={setShowSavedSearches}>
@@ -392,7 +392,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                                         {showSavedSearches ? 'Hide' : 'Show'}
                                     </Button>
                                 </CollapsibleTrigger>
-                                <CollapsibleContent className="space-y-4 mt-4">
+                                <CollapsibleContent className="stack-section mt-3">
                                     {/* Save Current Search */}
                                     <div className="flex gap-2">
                                         <Input
