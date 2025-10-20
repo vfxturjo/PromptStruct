@@ -193,7 +193,7 @@ export function MainLayout() {
                         </Button>
                         <div>
                             <h1 className="text-2xl font-semibold">
-                                Project Gemini
+                                PromptStruct
                             </h1>
                             {currentProject && currentPrompt && (
                                 <p className="text-sm text-muted-foreground mt-1">

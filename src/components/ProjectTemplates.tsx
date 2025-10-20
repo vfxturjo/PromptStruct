@@ -202,7 +202,7 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
 
     // Load templates from localStorage
     useEffect(() => {
-        const savedTemplates = localStorage.getItem('gemini-project-templates');
+        const savedTemplates = localStorage.getItem('promptstruct-project-templates');
         if (savedTemplates) {
             const parsed = JSON.parse(savedTemplates);
             setTemplates([...builtInTemplates, ...parsed]);
@@ -252,7 +252,7 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
 
         // Save to localStorage (excluding built-in templates)
         const customTemplates = newTemplates.filter(t => !t.isBuiltIn);
-        localStorage.setItem('gemini-project-templates', JSON.stringify(customTemplates));
+        localStorage.setItem('promptstruct-project-templates', JSON.stringify(customTemplates));
 
         setNewTemplate({ name: '', description: '', category: 'general', tags: [] });
         setShowCreateForm(false);
@@ -266,7 +266,7 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
         setTemplates(newTemplates);
 
         const customTemplates = newTemplates.filter(t => !t.isBuiltIn);
-        localStorage.setItem('gemini-project-templates', JSON.stringify(customTemplates));
+        localStorage.setItem('promptstruct-project-templates', JSON.stringify(customTemplates));
     };
 
     const handleExportTemplate = (template: ProjectTemplate) => {

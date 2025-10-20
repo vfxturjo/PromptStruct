@@ -256,7 +256,7 @@ export const useEditorStore = create<EditorState>()(
             },
         }),
         {
-            name: 'gemini-editor-storage',
+            name: 'promptstruct-storage',
             partialize: (state) => ({
                 // Persist core session so refresh restores user's workspace
                 structure: state.structure,

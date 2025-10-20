@@ -55,12 +55,12 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
 
     // Load saved searches and history from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem('gemini-saved-searches');
+        const saved = localStorage.getItem('promptstruct-saved-searches');
         if (saved) {
             setSavedSearches(JSON.parse(saved));
         }
 
-        const history = localStorage.getItem('gemini-search-history');
+        const history = localStorage.getItem('promptstruct-search-history');
         if (history) {
             setSearchHistory(JSON.parse(history));
         }
@@ -147,7 +147,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
         if (searchFilters.query && !searchHistory.includes(searchFilters.query)) {
             const newHistory = [searchFilters.query, ...searchHistory].slice(0, 10);
             setSearchHistory(newHistory);
-            localStorage.setItem('gemini-search-history', JSON.stringify(newHistory));
+            localStorage.setItem('promptstruct-search-history', JSON.stringify(newHistory));
         }
     };
 
@@ -167,7 +167,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
 
         const newSavedSearches = [...savedSearches, savedSearch];
         setSavedSearches(newSavedSearches);
-        localStorage.setItem('gemini-saved-searches', JSON.stringify(newSavedSearches));
+        localStorage.setItem('promptstruct-saved-searches', JSON.stringify(newSavedSearches));
         setNewSearchName('');
     };
 
@@ -179,7 +179,7 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
     const handleRemoveSavedSearch = (searchId: string) => {
         const newSavedSearches = savedSearches.filter(s => s.id !== searchId);
         setSavedSearches(newSavedSearches);
-        localStorage.setItem('gemini-saved-searches', JSON.stringify(newSavedSearches));
+        localStorage.setItem('promptstruct-saved-searches', JSON.stringify(newSavedSearches));
     };
 
     const handleHistoryClick = (query: string) => {

@@ -1,6 +1,6 @@
-# Project Gemini - The Intelligent Prompt Engineer
+# PromptStruct - Structured Prompt Builder
 
-A sophisticated, client-side web application designed to streamline the creation, management, and sharing of structured prompts for Large Language Models (LLMs).
+A sophisticated, client-side web application designed to streamline the creation, management, and sharing of structured prompts for Large Language Models (LLMs). Build complex, reusable, and dynamic prompt templates with ease.
 
 ## 🚀 Features Implemented
 

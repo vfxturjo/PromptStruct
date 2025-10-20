@@ -1,7 +1,7 @@
-# Project Prompter - UI Summary
+# PromptStruct - UI Summary
 
 ## Overview
-Project Prompter is a sophisticated prompt engineering application built with React, TypeScript, and Tailwind CSS. The application provides a comprehensive interface for managing projects, creating prompts, and organizing content with advanced features.
+PromptStruct is a sophisticated structured prompt building application built with React, TypeScript, and Tailwind CSS. The application provides a comprehensive interface for managing projects, creating structured prompts, and organizing content with advanced features.
 
 ## Architecture
 

@@ -1,4 +1,4 @@
-// Core data types for Project Gemini
+// Core data types for PromptStruct
 
 export interface ProjectSettings {
     autoSaveEnabled: boolean;

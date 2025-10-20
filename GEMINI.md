@@ -1,8 +1,8 @@
-# Project Gemini: The Intelligent Prompt Engineer
+# PromptStruct: The Structured Prompt Builder
 
 ## 1. Overview
 
-Project Gemini is a sophisticated, client-side web application designed to streamline the creation, management, and sharing of structured prompts for Large Language Models (LLMs). It empowers users to move beyond simple text prompts and build complex, reusable, and dynamic prompt templates.
+PromptStruct is a sophisticated, client-side web application designed to streamline the creation, management, and sharing of structured prompts for Large Language Models (LLMs). It empowers users to move beyond simple text prompts and build complex, reusable, and dynamic prompt templates.
 
 The application will be a Single Page Application (SPA) built with a modern technology stack, ensuring a fast, responsive, and intuitive user experience. A primary design goal is for the application to be easily deployable on static hosting services like GitHub Pages.
 
@@ -10,7 +10,7 @@ The application will be a Single Page Application (SPA) built with a modern tech
 
 ### 2.1. The Element System: Dynamic & Composable Prompts
 
-The foundation of Gemini is the "Element" system. Elements are snippets of text that contain dynamic controls, allowing for on-the-fly modification of the final prompt.
+The foundation of PromptStruct is the "Element" system. Elements are snippets of text that contain dynamic controls, allowing for on-the-fly modification of the final prompt.
 
 -   **Syntax:** Controls are defined using a simple, human-readable syntax: `{{type:Control_Name:Default_Value}}`. For encapsulating blocks of text, a closing tag is used: `{{type:Control_Name}}...{{/type:Control_Name}}`.
 -   **Control Types:**
