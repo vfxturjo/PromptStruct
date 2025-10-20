@@ -18,7 +18,7 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
     if (controls.length === 0) {
         return (
-            <Alert>
+            <Alert className="section-vpad">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
                     No dynamic controls found. Use <code className="bg-muted px-1 py-0.5 rounded text-xs">{'{{text:Name:Default}}'}</code> syntax to add controls.
@@ -28,14 +28,14 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
     }
 
     return (
-        <div className="space-y-2">
+        <div className="field-stack section-vpad">
             {controls.map((control) => {
                 const currentValue = controlValues[control.element.name] ?? control.element.defaultValue;
 
                 switch (control.element.type) {
                     case 'text':
                         return (
-                            <div key={control.element.name} className="space-y-2">
+                            <div key={control.element.name} className="field-stack">
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}
                                 </Label>
@@ -52,7 +52,7 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
                     case 'select':
                         return (
-                            <div key={control.element.name} className="space-y-2">
+                            <div key={control.element.name} className="field-stack">
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}
                                 </Label>
@@ -88,7 +88,7 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                     case 'slider':
                         const sliderValue = parseInt(currentValue) || parseInt(control.element.defaultValue || '50');
                         return (
-                            <div key={control.element.name} className="space-y-2">
+                            <div key={control.element.name} className="field-stack">
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}: {sliderValue}
                                 </Label>

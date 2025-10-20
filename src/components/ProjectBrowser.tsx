@@ -1,6 +1,6 @@
 import { useEditorStore } from '@/stores/editorStore';
 import { Project, Prompt } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationService } from '@/services/notificationService';
 import { useKeyboardShortcuts, CommonShortcuts } from '@/services/keyboardShortcuts';
@@ -27,7 +27,16 @@ export function ProjectBrowser() {
         deleteProject,
         deletePrompt,
         setCurrentProject,
-        setCurrentPrompt
+        setCurrentPrompt,
+        setProjects,
+        setPrompts,
+        setVersions,
+        setPreviewMode,
+        setUiHelpPanelExpanded,
+        setUiPanelLayout,
+        setUiCollapsedByElementId,
+        setUiGlobalControlValues,
+        versions
     } = useEditorStore();
 
     const navigate = useNavigate();
@@ -44,6 +53,14 @@ export function ProjectBrowser() {
     const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
     const [searchResults, setSearchResults] = useState<{ projects: Project[]; prompts: Prompt[] } | null>(null);
     const [showProjectTemplates, setShowProjectTemplates] = useState(false);
+
+    // Restore selection on mount
+    useEffect(() => {
+        const { currentProject } = useEditorStore.getState();
+        if (currentProject) {
+            setSelectedProject(currentProject);
+        }
+    }, []);
 
     // Keyboard shortcuts
     useKeyboardShortcuts([
@@ -300,10 +317,86 @@ export function ProjectBrowser() {
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target?.result as string);
-                // TODO: Implement import logic
-                console.log('Import data:', data);
+
+                // Validate required keys
+                if (!data.projects || !data.prompts || !data.versions || !data.uiState) {
+                    NotificationService.error('Invalid import file format');
+                    return;
+                }
+
+                // Merge projects by ID (upsert)
+                const mergedProjects = [...projects];
+                data.projects.forEach((importedProject: Project) => {
+                    const existingIndex = mergedProjects.findIndex(p => p.id === importedProject.id);
+                    if (existingIndex >= 0) {
+                        mergedProjects[existingIndex] = { ...mergedProjects[existingIndex], ...importedProject };
+                    } else {
+                        mergedProjects.push(importedProject);
+                    }
+                });
+
+                // Merge prompts by ID (upsert)
+                const mergedPrompts = [...prompts];
+                data.prompts.forEach((importedPrompt: Prompt) => {
+                    const existingIndex = mergedPrompts.findIndex(p => p.id === importedPrompt.id);
+                    if (existingIndex >= 0) {
+                        mergedPrompts[existingIndex] = { ...mergedPrompts[existingIndex], ...importedPrompt };
+                    } else {
+                        mergedPrompts.push(importedPrompt);
+                    }
+                });
+
+                // Merge versions by ID (upsert)
+                const mergedVersions = [...versions];
+                data.versions.forEach((importedVersion: any) => {
+                    const existingIndex = mergedVersions.findIndex(v => v.id === importedVersion.id);
+                    if (existingIndex >= 0) {
+                        mergedVersions[existingIndex] = { ...mergedVersions[existingIndex], ...importedVersion };
+                    } else {
+                        mergedVersions.push(importedVersion);
+                    }
+                });
+
+                // Apply merged data to store
+                setProjects(mergedProjects);
+                setPrompts(mergedPrompts);
+                setVersions(mergedVersions);
+
+                // Restore UI state
+                if (data.uiState.previewMode) {
+                    setPreviewMode(data.uiState.previewMode);
+                }
+                if (data.uiState.helpPanelExpanded !== undefined) {
+                    setUiHelpPanelExpanded(data.uiState.helpPanelExpanded);
+                }
+                if (data.uiState.panelLayout) {
+                    setUiPanelLayout(data.uiState.panelLayout);
+                }
+                if (data.uiState.collapsedByElementId) {
+                    setUiCollapsedByElementId(data.uiState.collapsedByElementId);
+                }
+                if (data.uiState.globalControlValues) {
+                    setUiGlobalControlValues(data.uiState.globalControlValues);
+                }
+
+                // Restore selection if IDs exist
+                if (data.uiState.currentProjectId) {
+                    const project = mergedProjects.find(p => p.id === data.uiState.currentProjectId);
+                    if (project) {
+                        setCurrentProject(project);
+                        setSelectedProject(project);
+                    }
+                }
+                if (data.uiState.currentPromptId) {
+                    const prompt = mergedPrompts.find(p => p.id === data.uiState.currentPromptId);
+                    if (prompt) {
+                        setCurrentPrompt(prompt);
+                    }
+                }
+
+                NotificationService.success('Workspace imported successfully!');
             } catch (error) {
-                console.error('Error importing project:', error);
+                NotificationService.error(`Import failed: ${error}`);
             }
         };
         reader.readAsText(file);

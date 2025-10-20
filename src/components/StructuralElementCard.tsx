@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { GripVertical, Trash2, ChevronDown, ChevronRight, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
 
 interface StructuralElementCardProps {
     element: StructuralElement;
@@ -18,6 +17,8 @@ interface StructuralElementCardProps {
     onToggle: (id: string) => void;
     controlValues: Record<string, any>;
     onControlChange: (name: string, value: any) => void;
+    collapsed: { text: boolean; controls: boolean };
+    onCollapsedChange: (collapsed: { text: boolean; controls: boolean }) => void;
 }
 
 export function StructuralElementCard({
@@ -26,10 +27,20 @@ export function StructuralElementCard({
     onDelete,
     onToggle,
     controlValues,
-    onControlChange
+    onControlChange,
+    collapsed,
+    onCollapsedChange
 }: StructuralElementCardProps) {
-    const [isTextExpanded, setIsTextExpanded] = useState(true);
-    const [isControlsExpanded, setIsControlsExpanded] = useState(true);
+    const isTextExpanded = !collapsed.text;
+    const isControlsExpanded = !collapsed.controls;
+
+    const handleTextToggle = () => {
+        onCollapsedChange({ ...collapsed, text: !collapsed.text });
+    };
+
+    const handleControlsToggle = () => {
+        onCollapsedChange({ ...collapsed, controls: !collapsed.controls });
+    };
 
     const {
         attributes,
@@ -48,10 +59,10 @@ export function StructuralElementCard({
 
 
     return (
-        <div ref={setNodeRef} style={style} className="mb-2">
-            <Card className={`transition-opacity ${!element.enabled ? 'opacity-50' : ''}`}>
-                <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
+        <div ref={setNodeRef} style={style} className="">
+            <Card className={`transition-opacity ${!element.enabled ? 'opacity-50' : ''} dark:bg-neutral-800`}>
+                <CardHeader className="card-header-sizing" style={{ minHeight: 'var(--card-header-height)' }}>
+                    <div className="card-toolbar">
                         <div
                             {...attributes}
                             {...listeners}
@@ -69,7 +80,7 @@ export function StructuralElementCard({
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setIsTextExpanded(!isTextExpanded)}
+                            onClick={handleTextToggle}
                             className="text-muted-foreground hover:text-foreground"
                             title={isTextExpanded ? "Hide text area" : "Show text area"}
                         >
@@ -78,21 +89,13 @@ export function StructuralElementCard({
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+                            onClick={handleControlsToggle}
                             className="text-muted-foreground hover:text-foreground"
                             title={isControlsExpanded ? "Hide dynamic controls" : "Show dynamic controls"}
                         >
                             {isControlsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                         </Button>
-                        {/* Accessible switch with explicit labels for tests */}
                         <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                className="text-xs underline-offset-2 hover:underline"
-                                onClick={() => onToggle(element.id)}
-                            >
-                                {element.enabled ? 'On' : 'Off'}
-                            </button>
                             <Switch
                                 checked={element.enabled}
                                 onCheckedChange={() => onToggle(element.id)}
@@ -112,29 +115,33 @@ export function StructuralElementCard({
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <Collapsible open={isTextExpanded} onOpenChange={setIsTextExpanded}>
-                        <CollapsibleContent>
-                            <EnhancedTextarea
-                                value={element.content}
-                                onChange={(e) => onUpdate(element.id, { content: e.target.value })}
-                                placeholder="Enter your prompt content here..."
-                                className="min-h-[100px] font-mono text-sm resize-y mb-2"
-                            />
-                        </CollapsibleContent>
-                    </Collapsible>
+                {(isTextExpanded || isControlsExpanded) && (
+                    <CardContent className="card-padding struct-card-content dark:bg-neutral-900">
+                        <Collapsible open={isTextExpanded} onOpenChange={(open) => onCollapsedChange({ ...collapsed, text: !open })}>
+                            <CollapsibleContent className="collapsible-content">
+                                <EnhancedTextarea
+                                    value={element.content}
+                                    onChange={(e) => onUpdate(element.id, { content: e.target.value })}
+                                    placeholder="Enter your prompt content here..."
+                                    className="min-h-[80px] font-mono text-sm resize-y dark:bg-neutral-900"
+                                />
+                            </CollapsibleContent>
+                        </Collapsible>
 
-                    <Collapsible open={isControlsExpanded} onOpenChange={setIsControlsExpanded}>
-                        <CollapsibleContent>
-                            <h4 className="text-sm font-medium mb-2">Dynamic Controls</h4>
-                            <ControlPanel
-                                content={element.content}
-                                controlValues={controlValues}
-                                onControlChange={onControlChange}
-                            />
-                        </CollapsibleContent>
-                    </Collapsible>
-                </CardContent>
+                        <Collapsible open={isControlsExpanded} onOpenChange={(open) => onCollapsedChange({ ...collapsed, controls: !open })}>
+                            <CollapsibleContent className="collapsible-content">
+                                {(isTextExpanded && isControlsExpanded) && (
+                                    <h4 className="text-sm font-medium title-spacing section-vpad">Dynamic Controls</h4>
+                                )}
+                                <ControlPanel
+                                    content={element.content}
+                                    controlValues={controlValues}
+                                    onControlChange={onControlChange}
+                                />
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </CardContent>
+                )}
             </Card>
         </div>
     );

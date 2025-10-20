@@ -92,9 +92,9 @@ export function ProjectSettings({ isOpen, onClose }: ProjectSettingsProps) {
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-4 py-3">
+                <div className="stack-section vpad-3">
                     {/* Basic Information */}
-                    <div className="space-y-3">
+                    <div className="stack-section">
                         <h4 className="text-lg font-semibold">Basic Information</h4>
 
                         <div className="space-y-2">

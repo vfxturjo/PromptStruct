@@ -24,32 +24,103 @@
     --ring: oklch(0.708 0 0);
     --radius: 0.625rem;
 
-    /* Layout spacing knobs (edit these only to change targeted spacing) */
+    /*
+     * Layout spacing knobs (edit these only to change targeted spacing)
+     * Where used:
+     *  - --layout-header-padding → .spacing-header (app top header container)
+     *  - --layout-panel-padding → .panel-padding (panel/column wrappers in main areas)
+     *  - --layout-title-margin-bottom → .title-spacing (space below section titles like Structure/Preview/Help)
+     *  - --layout-stack-gap → .stack-section (vertical stacks in dialogs/pages)
+     *  - --layout-stack-gap-relaxed → .stack-section-relaxed (looser stacks when used)
+     *  - --layout-grid-gap → .grid-gap (grid row/column gaps)
+     *  - --layout-grid-gap-relaxed → .grid-gap-relaxed (looser grid gaps)
+     *  - --layout-vertical-pad-3/4 → .vpad-3/.vpad-4 (generic vertical padding helpers)
+     */
     --layout-header-padding: 0.25rem;
-    /* header padding */
-    --layout-header-padding-tight: 0.15rem;
+    /* .spacing-header (MainLayout header) */
+    --layout-header-padding-tight: 0.5rem;
+    /* (not used; reserved for future) */
     --layout-panel-padding: 0.25rem;
-    /* panel/container padding */
-    --layout-panel-padding-tight: 0.15rem;
-    --layout-title-margin-bottom: 0.15rem;
-    /* spacing below titles */
-    --layout-stack-gap: 0.15rem;
-    /* vertical stack gap */
-    --layout-stack-gap-relaxed: 0.15rem;
+    /* .panel-padding (panels/columns in MainLayout/Browser) */
+    --layout-panel-padding-tight: 0.5rem;
+    /* (not used; reserved for future) */
+    --layout-title-margin-bottom: 0.25rem;
+    /* .title-spacing (below h3/h4 titles) */
+    --layout-stack-gap: 0.5rem;
+    /* .stack-section (vertical stacks) */
+    --layout-stack-gap-relaxed: 0.5rem;
+    /* .stack-section-relaxed (looser stacks) */
     --layout-grid-gap: 0.15rem;
-    /* grid gap */
-    --layout-grid-gap-relaxed: 0.5rem;
-    --layout-vertical-pad-3: 0.5rem;
-    /* block padding helpers */
-    --layout-vertical-pad-4: 0.5rem;
+    /* .grid-gap (grids in dialogs/forms) */
+    --layout-grid-gap-relaxed: 0.25rem;
+    /* .grid-gap-relaxed (looser grids) */
+    --layout-vertical-pad-3: 0.25rem;
+    /* .vpad-3 (generic vertical padding) */
+    --layout-vertical-pad-4: 0.25rem;
+    /* .vpad-4 (generic vertical padding) */
+
+    /*
+     * Structure panel spacing
+     * Where used: .structure-gap (MainLayout → Structure list container)
+     * Controls the space between element cards in the Structure panel.
+     */
+    --layout-structure-gap: 0.25rem;
+    /* .structure-gap > * + * */
+
+    /*
+     * Structural element card content padding
+     * Where used: .struct-card-content on element CardContent
+     */
+    --struct-card-content-pad-y: 0.25rem;
+    /* vertical padding */
+    --struct-card-content-pad-x: 0.5rem;
+    /* horizontal padding */
+
+    /*
+     * Card density variables
+     * Where used:
+     *  - --card-pad → .card-padding (CardContent padding)
+     *  - --card-header-pad-y/x → .card-header-sizing (CardHeader inner padding)
+     *  - --card-header-height → inline style on CardHeader (min-height)
+     *  - --card-toolbar-gap → .card-toolbar (gap between header icons/buttons)
+     */
+    --card-pad: 0rem;
+    /* .card-padding */
+    --card-header-pad-y: 1rem;
+    /* .card-header-sizing */
+    --card-header-pad-x: 0rem;
+    /* .card-header-sizing */
+    --card-header-height: 0rem;
+    /* CardHeader inline min-height */
+    --card-toolbar-gap: 0rem;
+    /* .card-toolbar */
+
+    /*
+     * Structural element card header spacing
+     * Where used: .card-header-sizing on structure element headers
+     * Adjust these to make element header bars thinner/thicker without touching other cards
+     */
+    --struct-card-header-pad-block: 0rem;
+    /* vertical padding for element headers */
+    --struct-card-header-pad-inline: 0.15rem;
+    /* horizontal padding for element headers */
+
+    /*
+     * Collapsed state spacing
+     * (Currently not used; collapsed sections aim for zero extra inner space)
+     */
+    --card-collapsed-vpad: 0rem;
+    /* reserved */
+
+    /*
+     * Form field vertical gap
+     * Where used: .field-stack (label/input/select vertical spacing)
+     */
+    --field-gap: 0.25rem;
+    /* .field-stack */
 }
 
-.tight,
-html.tight {
-    /* When tight mode is enabled globally, swap to tight paddings */
-    --layout-header-padding: var(--layout-header-padding-tight);
-    --layout-panel-padding: var(--layout-panel-padding-tight);
-}
+/* Removed tight/compact mode: single absolute style is used */
 
 .dark {
     --background: oklch(0.145 0 0);
@@ -174,5 +245,60 @@ html.tight {
 
     .vpad-4 {
         padding-block: var(--layout-vertical-pad-4);
+    }
+
+    /* Structure list spacing */
+    .structure-gap>*+* {
+        margin-top: var(--layout-structure-gap);
+    }
+
+    /* Card utilities */
+    .card-padding {
+        padding: var(--card-pad);
+    }
+
+    .card-header-sizing {
+        /* Use structural header variables and force override default CardHeader padding */
+        padding-block: var(--struct-card-header-pad-block) !important;
+        padding-inline: var(--struct-card-header-pad-inline) !important;
+        min-height: var(--card-header-height);
+    }
+
+    .card-toolbar {
+        display: flex;
+        align-items: center;
+        gap: var(--card-toolbar-gap);
+    }
+
+    .collapsed-vpad {
+        padding-top: var(--card-collapsed-vpad);
+        padding-bottom: var(--card-collapsed-vpad);
+    }
+
+    /* Form field stacks */
+    .field-stack {
+        display: flex;
+        flex-direction: column;
+        gap: var(--field-gap);
+    }
+
+    /* Symmetric vertical spacing helper for sections */
+    .section-vpad {
+        margin-block: var(--layout-stack-gap);
+    }
+
+    /* Structural element card content utility */
+    .struct-card-content {
+        /* Use shorthand with !important to win over library defaults */
+        padding: var(--struct-card-content-pad-y, var(--card-pad)) var(--struct-card-content-pad-x, var(--card-pad)) !important;
+    }
+
+    /* Ensure collapsible content takes no space when closed */
+    .collapsible-content[data-state="closed"] {
+        display: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
     }
 }

@@ -3,7 +3,7 @@ import { useEditorStore } from '@/stores/editorStore';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { StructuralElement } from '@/types';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { renderPrompt, parseControlSyntax } from '@/utils/syntaxParser';
 import { useNavigate } from 'react-router-dom';
 import { NotificationService } from '@/services/notificationService';
@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { Kbd } from '@/components/ui/kbd';
 import { ArrowLeft, Save, Download, Copy, HelpCircle, ChevronRight, Plus } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { CompactToggle } from './CompactToggle';
 
 export function MainLayout() {
     const {
@@ -28,12 +27,20 @@ export function MainLayout() {
         updateStructure,
         currentProject,
         currentPrompt,
-        saveCurrentPrompt
+        saveCurrentPrompt,
+        uiCollapsedByElementId,
+        uiHelpPanelExpanded,
+        uiGlobalControlValues,
+        setUiCollapsedForElement,
+        setUiHelpPanelExpanded,
+        setUiGlobalControlValues,
+        projects,
+        prompts,
+        versions,
+        uiPanelLayout
     } = useEditorStore();
 
     const navigate = useNavigate();
-    const [globalControlValues, setGlobalControlValues] = useState<Record<string, any>>({});
-    const [helpPanelExpanded, setHelpPanelExpanded] = useState(true);
 
     const handleSave = () => {
         try {
@@ -126,15 +133,47 @@ export function MainLayout() {
         addStructuralElement(newElement);
     };
 
+    const handleExport = () => {
+        try {
+            const exportData = {
+                projects,
+                prompts,
+                versions,
+                uiState: {
+                    previewMode,
+                    currentProjectId: currentProject?.id || null,
+                    currentPromptId: currentPrompt?.id || null,
+                    helpPanelExpanded: uiHelpPanelExpanded,
+                    panelLayout: uiPanelLayout,
+                    collapsedByElementId: uiCollapsedByElementId,
+                    globalControlValues: uiGlobalControlValues
+                }
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'prompt-workspace.json';
+            link.click();
+            URL.revokeObjectURL(url);
+
+            NotificationService.success('Workspace exported successfully!');
+        } catch (error) {
+            NotificationService.error(`Export failed: ${error}`);
+        }
+    };
+
     const handleGlobalControlChange = (name: string, value: any) => {
-        setGlobalControlValues(prev => ({ ...prev, [name]: value }));
+        setUiGlobalControlValues({ ...uiGlobalControlValues, [name]: value });
     };
 
     const renderPreview = () => {
         const enabledElements = structure.filter(el => el.enabled);
         const renderedContent = enabledElements.map(element => {
             const controls = parseControlSyntax(element.content);
-            return renderPrompt(element.content, controls, globalControlValues);
+            return renderPrompt(element.content, controls, uiGlobalControlValues);
         }).join('\n\n');
 
         return previewMode === 'raw' ?
@@ -168,23 +207,10 @@ export function MainLayout() {
                             <Save className="w-4 h-4 mr-2" />
                             Save
                         </Button>
-                        <Button variant="outline">
+                        <Button variant="outline" onClick={handleExport}>
                             <Download className="w-4 h-4 mr-2" />
                             Export
                         </Button>
-                        <Button
-                            onClick={() => setPreviewMode('clean')}
-                            variant={previewMode === 'clean' ? 'default' : 'outline'}
-                        >
-                            Clean
-                        </Button>
-                        <Button
-                            onClick={() => setPreviewMode('raw')}
-                            variant={previewMode === 'raw' ? 'default' : 'outline'}
-                        >
-                            Raw
-                        </Button>
-                        <CompactToggle />
                         <ThemeToggle />
                     </div>
                 </div>
@@ -195,10 +221,10 @@ export function MainLayout() {
                 <PanelGroup direction="horizontal" className="h-full">
                     {/* Structure Panel */}
                     <Panel defaultSize={30} minSize={20} maxSize={50}>
-                        <div className="h-full border-r p-4 flex flex-col">
-                            <Card className="h-full flex flex-col">
+                        <div className="h-full border-r panel-padding flex flex-col">
+                            <Card className="h-full flex flex-col dark:bg-neutral-900">
                                 <CardHeader className="flex-shrink-0">
-                                    <h3 className="text-lg font-bold">
+                                    <h3 className="text-lg font-bold title-spacing">
                                         Structure
                                     </h3>
                                 </CardHeader>
@@ -209,7 +235,7 @@ export function MainLayout() {
                                         onDragEnd={handleDragEnd}
                                     >
                                         <SortableContext items={structure.map(el => el.id)} strategy={verticalListSortingStrategy}>
-                                            <div className="space-y-2">
+                                            <div className="structure-gap">
                                                 {structure.length === 0 ? (
                                                     <p className="text-muted-foreground text-sm">
                                                         No structural elements yet. Add one to get started.
@@ -222,8 +248,10 @@ export function MainLayout() {
                                                             onUpdate={updateStructuralElement}
                                                             onDelete={removeStructuralElement}
                                                             onToggle={toggleStructuralElement}
-                                                            controlValues={globalControlValues}
+                                                            controlValues={uiGlobalControlValues}
                                                             onControlChange={handleGlobalControlChange}
+                                                            collapsed={uiCollapsedByElementId[element.id] || { text: true, controls: true }}
+                                                            onCollapsedChange={(collapsed) => setUiCollapsedForElement(element.id, collapsed)}
                                                         />
                                                     ))
                                                 )}
@@ -247,13 +275,27 @@ export function MainLayout() {
                     <PanelResizeHandle className="w-2 bg-border" />
 
                     {/* Preview Panel */}
-                    <Panel defaultSize={helpPanelExpanded ? 50 : 70} minSize={30}>
-                        <div className="h-full p-4 flex flex-col">
-                            <Card className="h-full flex flex-col">
-                                <CardHeader className="flex-shrink-0">
-                                    <h3 className="text-lg font-bold">
+                    <Panel defaultSize={uiHelpPanelExpanded ? 50 : 70} minSize={30}>
+                        <div className="h-full panel-padding flex flex-col">
+                            <Card className="h-full flex flex-col dark:bg-neutral-900">
+                                <CardHeader className="flex-shrink-0 flex items-center justify-between">
+                                    <h3 className="text-lg font-bold title-spacing">
                                         Preview
                                     </h3>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            onClick={() => setPreviewMode('clean')}
+                                            variant={previewMode === 'clean' ? 'default' : 'outline'}
+                                        >
+                                            Clean
+                                        </Button>
+                                        <Button
+                                            onClick={() => setPreviewMode('raw')}
+                                            variant={previewMode === 'raw' ? 'default' : 'outline'}
+                                        >
+                                            Raw
+                                        </Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent className="flex-1 overflow-y-auto">
                                     <div className="whitespace-pre-wrap font-mono text-sm">
@@ -283,25 +325,25 @@ export function MainLayout() {
                     </Panel>
 
                     {/* Help Panel */}
-                    {helpPanelExpanded && (
+                    {uiHelpPanelExpanded && (
                         <>
                             <PanelResizeHandle className="w-2 bg-border" />
                             <Panel defaultSize={20} minSize={15} maxSize={40}>
-                                <div className="h-full border-l p-4 flex flex-col">
-                                    <Card className="h-full flex flex-col">
+                                <div className="h-full border-l panel-padding flex flex-col">
+                                    <Card className="h-full flex flex-col dark:bg-neutral-900">
                                         <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
-                                            <h3 className="text-lg font-bold">
+                                            <h3 className="text-lg font-bold title-spacing">
                                                 Help
                                             </h3>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => setHelpPanelExpanded(false)}
+                                                onClick={() => setUiHelpPanelExpanded(false)}
                                             >
                                                 <ChevronRight className="w-4 h-4" />
                                             </Button>
                                         </CardHeader>
-                                        <CardContent className="flex-1 overflow-y-auto space-y-4">
+                                        <CardContent className="flex-1 overflow-y-auto stack-section">
                                             <div>
                                                 <h4 className="text-sm font-medium mb-2">📝 Edit Elements</h4>
                                                 <p className="text-sm text-muted-foreground">
@@ -372,12 +414,12 @@ export function MainLayout() {
                 </PanelGroup>
 
                 {/* Help Panel Toggle (when collapsed) */}
-                {!helpPanelExpanded && (
+                {!uiHelpPanelExpanded && (
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setHelpPanelExpanded(true)}
+                            onClick={() => setUiHelpPanelExpanded(true)}
                         >
                             <HelpCircle className="w-4 h-4" />
                         </Button>

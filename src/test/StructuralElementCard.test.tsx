@@ -37,6 +37,8 @@ describe('StructuralElementCard', () => {
         onToggle: vi.fn(),
         controlValues: {},
         onControlChange: vi.fn(),
+        collapsed: { text: true, controls: true },
+        onCollapsedChange: vi.fn(),
     }
 
     beforeEach(() => {
@@ -58,14 +60,16 @@ describe('StructuralElementCard', () => {
     it('should show enabled state', () => {
         render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
 
-        expect(screen.getByText('On')).toBeInTheDocument()
+        const switchControl = screen.getByRole('switch')
+        expect(switchControl).toHaveAttribute('aria-checked', 'true')
     })
 
     it('should show disabled state', () => {
         const disabledElement = { ...mockElement, enabled: false }
         render(<StructuralElementCard element={disabledElement} {...mockHandlers} />)
 
-        expect(screen.getByText('Off')).toBeInTheDocument()
+        const switchControl = screen.getByRole('switch')
+        expect(switchControl).toHaveAttribute('aria-checked', 'false')
     })
 
     it('should call onUpdate when name changes', () => {
@@ -86,11 +90,11 @@ describe('StructuralElementCard', () => {
         expect(mockHandlers.onUpdate).toHaveBeenCalledWith('test-1', { content: 'New content' })
     })
 
-    it('should call onToggle when toggle button clicked', () => {
+    it('should call onToggle when toggle is clicked', () => {
         render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
 
-        const toggleButton = screen.getByText('On')
-        fireEvent.click(toggleButton)
+        const switchControl = screen.getByRole('switch')
+        fireEvent.click(switchControl)
 
         expect(mockHandlers.onToggle).toHaveBeenCalledWith('test-1')
     })

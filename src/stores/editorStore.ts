@@ -14,6 +14,12 @@ interface EditorState {
     prompts: Prompt[];
     versions: Version[];
 
+    // UI state (persisted)
+    uiCollapsedByElementId: Record<string, { text: boolean; controls: boolean }>;
+    uiHelpPanelExpanded: boolean;
+    uiPanelLayout?: { left: number; right: number };
+    uiGlobalControlValues: Record<string, any>;
+
     // Actions
     setPreviewMode: (mode: 'clean' | 'raw') => void;
     updateStructuralElement: (id: string, updates: Partial<StructuralElement>) => void;
@@ -22,22 +28,32 @@ interface EditorState {
     toggleStructuralElement: (id: string) => void;
     updateStructure: (newStructure: StructuralElement[]) => void;
 
+    // UI actions
+    setUiCollapsedForElement: (id: string, collapsed: { text: boolean; controls: boolean }) => void;
+    setUiHelpPanelExpanded: (expanded: boolean) => void;
+    setUiPanelLayout: (layout: { left: number; right: number } | undefined) => void;
+    setUiGlobalControlValues: (values: Record<string, any>) => void;
+    setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean }>) => void;
+
     // Project management
     addProject: (project: Project) => void;
     updateProject: (id: string, updates: Partial<Project>) => void;
     deleteProject: (id: string) => void;
     setCurrentProject: (project: Project | null) => void;
+    setProjects: (projects: Project[]) => void;
 
     // Prompt management
     addPrompt: (prompt: Prompt) => void;
     updatePrompt: (id: string, updates: Partial<Prompt>) => void;
     deletePrompt: (id: string) => void;
     setCurrentPrompt: (prompt: Prompt | null) => void;
+    setPrompts: (prompts: Prompt[]) => void;
 
     // Version management
     addVersion: (version: Version) => void;
     updateVersion: (id: string, updates: Partial<Version>) => void;
     deleteVersion: (id: string) => void;
+    setVersions: (versions: Version[]) => void;
 
     // Utility functions
     saveCurrentPrompt: () => void;
@@ -75,6 +91,10 @@ export const useEditorStore = create<EditorState>()(
             projects: [],
             prompts: [],
             versions: [],
+            uiCollapsedByElementId: {},
+            uiHelpPanelExpanded: true,
+            uiPanelLayout: undefined,
+            uiGlobalControlValues: {},
 
             // Preview mode
             setPreviewMode: (mode) => set({ previewMode: mode }),
@@ -113,6 +133,16 @@ export const useEditorStore = create<EditorState>()(
 
             updateStructure: (newStructure) => set({ structure: newStructure }),
 
+            // UI actions
+            setUiCollapsedForElement: (id, collapsed) =>
+                set((state) => ({
+                    uiCollapsedByElementId: { ...state.uiCollapsedByElementId, [id]: collapsed },
+                })),
+            setUiHelpPanelExpanded: (expanded) => set({ uiHelpPanelExpanded: expanded }),
+            setUiPanelLayout: (layout) => set({ uiPanelLayout: layout }),
+            setUiGlobalControlValues: (values) => set({ uiGlobalControlValues: values }),
+            setUiCollapsedByElementId: (collapsed) => set({ uiCollapsedByElementId: collapsed }),
+
             // Project management
             addProject: (project) =>
                 set((state) => ({
@@ -136,6 +166,7 @@ export const useEditorStore = create<EditorState>()(
                 })),
 
             setCurrentProject: (project) => set({ currentProject: project }),
+            setProjects: (projects) => set({ projects }),
 
             // Prompt management
             addPrompt: (prompt) =>
@@ -157,6 +188,7 @@ export const useEditorStore = create<EditorState>()(
                 })),
 
             setCurrentPrompt: (prompt) => set({ currentPrompt: prompt }),
+            setPrompts: (prompts) => set({ prompts }),
 
             // Version management
             addVersion: (version) =>
@@ -175,6 +207,7 @@ export const useEditorStore = create<EditorState>()(
                 set((state) => ({
                     versions: state.versions.filter((version) => version.id !== id),
                 })),
+            setVersions: (versions) => set({ versions }),
 
             // Utility functions
             saveCurrentPrompt: () => {
@@ -226,6 +259,10 @@ export const useEditorStore = create<EditorState>()(
                 versions: state.versions,
                 currentProject: state.currentProject,
                 currentPrompt: state.currentPrompt,
+                uiCollapsedByElementId: state.uiCollapsedByElementId,
+                uiHelpPanelExpanded: state.uiHelpPanelExpanded,
+                uiPanelLayout: state.uiPanelLayout,
+                uiGlobalControlValues: state.uiGlobalControlValues,
             }),
         }
     )
