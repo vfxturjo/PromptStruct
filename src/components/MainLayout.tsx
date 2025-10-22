@@ -1,9 +1,9 @@
-import { StructuralElementCard } from './StructuralElementCard';
+import { StructuralElementCard, StructuralElementCardRef } from './StructuralElementCard';
 import { useEditorStore } from '@/stores/editorStore';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { StructuralElement } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { renderPrompt, parseControlSyntax } from '@/utils/syntaxParser';
 import { useNavigate } from 'react-router-dom';
 import { NotificationService } from '@/services/notificationService';
@@ -12,8 +12,9 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Kbd } from '@/components/ui/kbd';
-import { ArrowLeft, Save, Download, Copy, HelpCircle, ChevronRight, Plus, Eye, EyeOff } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
+import { Save, Download, Copy, HelpCircle, ChevronRight, Plus, Eye, EyeOff } from 'lucide-react';
+import { TopBar } from './TopBar';
+import { ExportOptionsModal } from './ExportOptionsModal';
 
 export function MainLayout() {
     const {
@@ -28,6 +29,7 @@ export function MainLayout() {
         currentProject,
         currentPrompt,
         saveCurrentPrompt,
+        cleanupOldAutoSaves,
         uiCollapsedByElementId,
         uiHelpPanelExpanded,
         uiPreviewPanelExpanded,
@@ -36,17 +38,25 @@ export function MainLayout() {
         setUiHelpPanelExpanded,
         setUiPreviewPanelExpanded,
         setUiGlobalControlValues,
-        projects,
-        prompts,
-        versions,
-        uiPanelLayout
+        versions
     } = useEditorStore();
+
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [highlightedElementId, setHighlightedElementId] = useState<string | null>(null);
+
+    // Refs for structural element cards
+    const elementCardRefs = useRef<Record<string, StructuralElementCardRef>>({});
 
     const navigate = useNavigate();
 
+    // Clean up old auto-saves on component mount
+    useEffect(() => {
+        cleanupOldAutoSaves();
+    }, [cleanupOldAutoSaves]);
+
     const handleSave = () => {
         try {
-            saveCurrentPrompt();
+            saveCurrentPrompt(false); // Manual save
             NotificationService.promptSaved(currentPrompt?.name || 'Untitled');
         } catch (error) {
             NotificationService.saveError(`Save failed: ${error}`);
@@ -54,7 +64,7 @@ export function MainLayout() {
     };
 
     const handleCopyPrompt = () => {
-        const renderedPrompt = renderPreview();
+        const renderedPrompt = renderPreviewForCopy();
         navigator.clipboard.writeText(renderedPrompt).then(() => {
             NotificationService.success('Prompt copied to clipboard!');
         }).catch(() => {
@@ -97,7 +107,7 @@ export function MainLayout() {
 
         const autoSaveInterval = setInterval(() => {
             try {
-                saveCurrentPrompt();
+                saveCurrentPrompt(true); // Auto-save
                 NotificationService.autoSaveSuccess();
             } catch (error) {
                 NotificationService.saveError(`Auto-save failed: ${error}`);
@@ -106,6 +116,15 @@ export function MainLayout() {
 
         return () => clearInterval(autoSaveInterval);
     }, [currentPrompt, structure, saveCurrentPrompt]);
+
+    // Clean up auto-saves periodically to prevent accumulation
+    useEffect(() => {
+        const cleanupInterval = setInterval(() => {
+            cleanupOldAutoSaves();
+        }, 300000); // Clean up every 5 minutes
+
+        return () => clearInterval(cleanupInterval);
+    }, [cleanupOldAutoSaves]);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -135,34 +154,43 @@ export function MainLayout() {
         addStructuralElement(newElement);
     };
 
-    const handleExport = () => {
+    const handleExportPrompt = (options: any) => {
         try {
-            const exportData = {
-                projects,
-                prompts,
-                versions,
-                uiState: {
-                    previewMode,
-                    currentProjectId: currentProject?.id || null,
-                    currentPromptId: currentPrompt?.id || null,
-                    helpPanelExpanded: uiHelpPanelExpanded,
-                    previewPanelExpanded: uiPreviewPanelExpanded,
-                    panelLayout: uiPanelLayout,
-                    collapsedByElementId: uiCollapsedByElementId,
-                    globalControlValues: uiGlobalControlValues
-                }
-            };
+            let exportData: any;
+            let filename: string;
+
+            if (options.scope === 'current') {
+                // Export current version only (structure state)
+                exportData = {
+                    prompt: currentPrompt,
+                    structure: structure,
+                    exportedAt: new Date().toISOString(),
+                    version: 'current'
+                };
+                filename = `${currentPrompt?.name || 'untitled'}_current.json`;
+            } else {
+                // Export all versions
+                const promptVersions = versions.filter(v => v.promptId === currentPrompt?.id);
+                exportData = {
+                    prompt: currentPrompt,
+                    versions: promptVersions,
+                    currentStructure: structure,
+                    exportedAt: new Date().toISOString(),
+                    version: 'all'
+                };
+                filename = `${currentPrompt?.name || 'untitled'}_all_versions.json`;
+            }
 
             const dataStr = JSON.stringify(exportData, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'prompt-workspace.json';
+            link.download = filename;
             link.click();
             URL.revokeObjectURL(url);
 
-            NotificationService.success('Workspace exported successfully!');
+            NotificationService.success(`Prompt exported successfully!`);
         } catch (error) {
             NotificationService.error(`Export failed: ${error}`);
         }
@@ -172,44 +200,193 @@ export function MainLayout() {
         setUiGlobalControlValues({ ...uiGlobalControlValues, [name]: value });
     };
 
-    const renderPreview = () => {
+    const handlePreviewDoubleClick = (elementId: string, event: React.MouseEvent) => {
+        console.log('Double-click detected for element:', elementId);
+
+        // Find the element
+        const element = structure.find(el => el.id === elementId);
+        if (!element) {
+            console.log('Element not found:', elementId);
+            return;
+        }
+
+        // Check current collapsed state
+        const currentCollapsed = uiCollapsedByElementId[elementId] || { text: true, controls: true };
+        const isTextCollapsed = currentCollapsed.text;
+        const isControlsCollapsed = currentCollapsed.controls;
+
+        console.log('Current collapsed state:', { text: isTextCollapsed, controls: isControlsCollapsed });
+
+        // Expand the element if text area is collapsed
+        if (isTextCollapsed) {
+            console.log('Expanding collapsed element');
+            setUiCollapsedForElement(elementId, {
+                text: false,
+                controls: isControlsCollapsed, // Keep controls state as is
+                lastExpandedState: { text: true, controls: isControlsCollapsed }
+            });
+        }
+
+        // Calculate cursor position accounting for dynamic controls
+        const calculateCursorPosition = (clickEvent: React.MouseEvent): number => {
+            const target = clickEvent.target as HTMLElement;
+            const elementSpan = target.closest('[data-element-id]') as HTMLElement;
+
+            if (!elementSpan) {
+                console.log('No element span found');
+                return 0;
+            }
+
+            // Get the rendered text content (with dynamic controls resolved)
+            const renderedText = elementSpan.textContent || '';
+            const spanRect = elementSpan.getBoundingClientRect();
+
+            // Calculate relative position
+            const relativeX = clickEvent.clientX - spanRect.left;
+            const relativeY = clickEvent.clientY - spanRect.top;
+
+            console.log('Click position:', { relativeX, relativeY, renderedText: renderedText.substring(0, 50) });
+
+            // Get the original element content (with raw control syntax)
+            const originalElement = structure.find(el => el.id === elementId);
+            if (!originalElement) {
+                console.log('Original element not found');
+                return 0;
+            }
+
+            const originalText = originalElement.content;
+            console.log('Original text:', originalText.substring(0, 50));
+
+            // Simple approach: estimate based on character width
+            const avgCharWidth = 8; // Approximate character width
+            const lineHeight = 16; // Approximate line height
+
+            // Find which line was clicked in the rendered text
+            const clickedLineIndex = Math.floor(relativeY / lineHeight);
+            const renderedLines = renderedText.split('\n');
+            const clickedRenderedLine = renderedLines[Math.min(clickedLineIndex, renderedLines.length - 1)] || '';
+
+            // Find character position within the rendered line
+            const charPosition = Math.floor(relativeX / avgCharWidth);
+            const clampedCharPosition = Math.min(charPosition, clickedRenderedLine.length);
+
+            // Calculate total position in rendered text
+            let renderedPosition = clampedCharPosition;
+            for (let i = 0; i < clickedLineIndex; i++) {
+                renderedPosition += renderedLines[i].length + 1; // +1 for newline
+            }
+
+            console.log('Rendered position:', renderedPosition, 'for rendered line:', clickedRenderedLine.substring(0, 20));
+
+            // Now we need to map this rendered position back to the original text position
+            // This is complex because dynamic controls can change text length
+            // For now, use a simple percentage-based mapping
+            const renderedLength = renderedText.length;
+            const originalLength = originalText.length;
+
+            if (renderedLength > 0) {
+                const percentage = renderedPosition / renderedLength;
+                const mappedPosition = Math.floor(originalLength * percentage);
+                const finalPosition = Math.min(mappedPosition, originalLength);
+
+                console.log('Mapped position:', finalPosition, 'from percentage:', percentage);
+                return finalPosition;
+            }
+
+            return 0;
+        };
+
+        // Scroll the element into view first
+        const elementCard = document.querySelector(`[data-element-card-id="${elementId}"]`) as HTMLElement;
+        if (elementCard) {
+            elementCard.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+        }
+
+        // Calculate cursor position
+        const cursorPosition = calculateCursorPosition(event);
+
+        // Focus the textarea and set cursor position using refs
+        const elementCardRef = elementCardRefs.current[elementId];
+        if (elementCardRef) {
+            // Use a delay to ensure the element is expanded and rendered
+            const delay = isTextCollapsed ? 300 : 100;
+            setTimeout(() => {
+                elementCardRef.focusTextarea();
+                elementCardRef.setTextareaSelectionRange(cursorPosition, cursorPosition);
+            }, delay);
+        } else {
+            console.log('Element card ref not found for:', elementId);
+        }
+    };
+
+    const renderPreviewForCopy = () => {
         const enabledElements = structure.filter(el => el.enabled);
+
+        if (enabledElements.length === 0) {
+            return '';
+        }
+
         const renderedContent = enabledElements.map(element => {
-            const controls = parseControlSyntax(element.content);
-            return renderPrompt(element.content, controls, uiGlobalControlValues);
+            let elementContent: string;
+
+            if (previewMode === 'raw') {
+                elementContent = element.content;
+            } else {
+                const controls = parseControlSyntax(element.content);
+                elementContent = renderPrompt(element.content, controls, uiGlobalControlValues);
+            }
+
+            return elementContent;
         }).join('\n\n');
 
-        return previewMode === 'raw' ?
-            enabledElements.map(el => el.content).join('\n\n') :
-            renderedContent;
+        return renderedContent;
+    };
+
+    const renderPreview = () => {
+        const enabledElements = structure.filter(el => el.enabled);
+
+        if (enabledElements.length === 0) {
+            return '';
+        }
+
+        const renderedContent = enabledElements.map(element => {
+            let elementContent: string;
+
+            if (previewMode === 'raw') {
+                elementContent = element.content;
+            } else {
+                const controls = parseControlSyntax(element.content);
+                elementContent = renderPrompt(element.content, controls, uiGlobalControlValues);
+            }
+
+            // Escape HTML and wrap with data attributes
+            const escapedContent = elementContent
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/\n/g, '<br>'); // Convert line breaks to <br> tags for HTML display
+
+            return `<span data-element-id="${element.id}" data-element-name="${element.name}">${escapedContent}</span>`;
+        }).join('\n\n');
+
+        return renderedContent;
     };
 
     return (
         <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
-            {/* Header */}
-            <header className="border-b spacing-header flex-shrink-0">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate('/browser')}
-                            title="Back to Browser"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl font-semibold">
-                                PromptStruct
-                            </h1>
-                            {currentProject && currentPrompt && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    {currentProject.name} → {currentPrompt.name}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
+            <TopBar
+                title="PromptStruct"
+                subtitle={currentProject && currentPrompt ? `${currentProject.name} → ${currentPrompt.name}` : undefined}
+                showBackButton={true}
+                onBackClick={() => navigate('/browser')}
+                additionalButtons={
+                    <>
                         <Button
                             variant="outline"
                             size="sm"
@@ -237,15 +414,14 @@ export function MainLayout() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={handleExport}
+                            onClick={() => setShowExportModal(true)}
                             title="Export"
                         >
                             <Download className="w-4 h-4" />
                         </Button>
-                        <ThemeToggle />
-                    </div>
-                </div>
-            </header>
+                    </>
+                }
+            />
 
             {/* Main Content */}
             <div className="flex-1 overflow-hidden">
@@ -275,6 +451,11 @@ export function MainLayout() {
                                                     structure.map((element) => (
                                                         <StructuralElementCard
                                                             key={element.id}
+                                                            ref={(ref) => {
+                                                                if (ref) {
+                                                                    elementCardRefs.current[element.id] = ref;
+                                                                }
+                                                            }}
                                                             element={element}
                                                             onUpdate={updateStructuralElement}
                                                             onDelete={removeStructuralElement}
@@ -283,6 +464,7 @@ export function MainLayout() {
                                                             onControlChange={handleGlobalControlChange}
                                                             collapsed={uiCollapsedByElementId[element.id] || { text: true, controls: true }}
                                                             onCollapsedChange={(collapsed) => setUiCollapsedForElement(element.id, collapsed)}
+                                                            highlighted={highlightedElementId === element.id}
                                                         />
                                                     ))
                                                 )}
@@ -310,7 +492,7 @@ export function MainLayout() {
                             <Panel defaultSize={uiHelpPanelExpanded ? 50 : 70}>
                                 <div className="h-full panel-padding flex flex-col">
                                     <Card className="h-full flex flex-col dark:bg-neutral-900">
-                                        <CardHeader className="flex-shrink-0 flex items-center justify-between">
+                                        <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
                                             <h3 className="text-lg font-bold title-spacing">
                                                 Preview
                                             </h3>
@@ -330,7 +512,28 @@ export function MainLayout() {
                                             </div>
                                         </CardHeader>
                                         <CardContent className="flex-1 overflow-y-auto">
-                                            <div className="whitespace-pre-wrap font-mono text-sm">
+                                            <div
+                                                className="whitespace-pre-wrap font-mono text-sm"
+                                                onMouseMove={(e) => {
+                                                    const target = e.target as HTMLElement;
+                                                    const elementSpan = target.closest('[data-element-id]') as HTMLElement;
+                                                    if (elementSpan) {
+                                                        const elementId = elementSpan.getAttribute('data-element-id');
+                                                        setHighlightedElementId(elementId);
+                                                    }
+                                                }}
+                                                onMouseLeave={() => setHighlightedElementId(null)}
+                                                onDoubleClick={(e) => {
+                                                    const target = e.target as HTMLElement;
+                                                    const elementSpan = target.closest('[data-element-id]') as HTMLElement;
+                                                    if (elementSpan) {
+                                                        const elementId = elementSpan.getAttribute('data-element-id');
+                                                        if (elementId) {
+                                                            handlePreviewDoubleClick(elementId, e);
+                                                        }
+                                                    }
+                                                }}
+                                            >
                                                 {structure.length === 0 ? (
                                                     <div className="text-center py-8">
                                                         <div className="text-4xl mb-4">✨</div>
@@ -338,7 +541,7 @@ export function MainLayout() {
                                                         <small className="text-muted-foreground">Add some elements to get started</small>
                                                     </div>
                                                 ) : (
-                                                    renderPreview()
+                                                    <div dangerouslySetInnerHTML={{ __html: renderPreview() }} />
                                                 )}
                                             </div>
                                         </CardContent>
@@ -448,6 +651,17 @@ export function MainLayout() {
                 </PanelGroup>
 
             </div>
+
+            {/* Export Options Modal */}
+            <ExportOptionsModal
+                isOpen={showExportModal}
+                onClose={() => setShowExportModal(false)}
+                onExport={handleExportPrompt}
+                exportType="prompt"
+                project={currentProject}
+                prompt={currentPrompt}
+                versions={versions}
+            />
         </div>
     );
 }

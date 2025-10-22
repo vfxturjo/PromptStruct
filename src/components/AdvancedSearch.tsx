@@ -36,9 +36,10 @@ interface AdvancedSearchProps {
     prompts: Prompt[];
     onSearchResults: (results: { projects: Project[]; prompts: Prompt[] }) => void;
     onClose: () => void;
+    onUseAsCriteria?: (criteria: any) => void;
 }
 
-export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onClose }: AdvancedSearchProps) {
+export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onClose, onUseAsCriteria }: AdvancedSearchProps) {
     const [filters, setFilters] = useState<SearchFilters>({
         query: '',
         tags: [],
@@ -452,6 +453,17 @@ export function AdvancedSearch({ isOpen, projects, prompts, onSearchResults, onC
                     <Button variant="outline" onClick={onClose}>
                         Close
                     </Button>
+                    {onUseAsCriteria && (
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                onUseAsCriteria(filters);
+                                onClose();
+                            }}
+                        >
+                            Use as Criteria
+                        </Button>
+                    )}
                     <Button onClick={handleSearch}>
                         <Search className="w-4 h-4 mr-2" />
                         Search

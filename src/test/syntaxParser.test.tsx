@@ -60,9 +60,45 @@ describe('Syntax Parser', () => {
             const content = '{{toggle:Show_Details}}Name: {{text:Character:Hero}}{{/toggle:Show_Details}}'
             const controls = parseControlSyntax(content)
 
-            expect(controls).toHaveLength(1)
+            expect(controls).toHaveLength(2)
             expect(controls[0].element.type).toBe('toggle')
+            expect(controls[0].element.name).toBe('Show_Details')
             expect(controls[0].content).toBe('Name: {{text:Character:Hero}}')
+            expect(controls[1].element.type).toBe('text')
+            expect(controls[1].element.name).toBe('Character')
+        })
+
+        it('should deduplicate controls with the same name', () => {
+            const content = 'Generate {{slider:image count:2}} images. Total: {{slider:image count:2}}'
+            const controls = parseControlSyntax(content)
+
+            expect(controls).toHaveLength(1)
+            expect(controls[0].element.type).toBe('slider')
+            expect(controls[0].element.name).toBe('image count')
+        })
+
+        it('should parse slider with custom range', () => {
+            const content = '{{slider:image count:2:1:5}}'
+            const controls = parseControlSyntax(content)
+
+            expect(controls).toHaveLength(1)
+            expect(controls[0].element.type).toBe('slider')
+            expect(controls[0].element.name).toBe('image count')
+            expect(controls[0].element.defaultValue).toBe('2')
+            expect(controls[0].element.min).toBe(1)
+            expect(controls[0].element.max).toBe(5)
+        })
+
+        it('should parse slider with default range when no custom range provided', () => {
+            const content = '{{slider:power:50}}'
+            const controls = parseControlSyntax(content)
+
+            expect(controls).toHaveLength(1)
+            expect(controls[0].element.type).toBe('slider')
+            expect(controls[0].element.name).toBe('power')
+            expect(controls[0].element.defaultValue).toBe('50')
+            expect(controls[0].element.min).toBe(0)
+            expect(controls[0].element.max).toBe(100)
         })
     })
 
@@ -128,6 +164,15 @@ describe('Syntax Parser', () => {
 
             const result = renderPrompt(content, controls, values)
             expect(result).toBe('Wizard in Fantasy with 80 power')
+        })
+
+        it('should replace multiple instances of the same control with the same value', () => {
+            const content = 'Generate {{slider:image count:2}} images. Total: {{slider:image count:2}}'
+            const controls = parseControlSyntax(content)
+            const values = { 'image count': '5' }
+            const result = renderPrompt(content, controls, values)
+
+            expect(result).toBe('Generate 5 images. Total: 5')
         })
     })
 })

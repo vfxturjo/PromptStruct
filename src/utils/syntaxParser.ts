@@ -70,9 +70,19 @@ export function parseControlSyntax(content: string): ParsedControl[] {
                 element.defaultValue = defaultValue?.trim() || '';
                 break;
             case 'slider':
-                element.defaultValue = defaultValue?.trim() || '50';
-                element.min = 0;
-                element.max = 100;
+                // Parse slider parameters: {{slider:name:default:min:max}}
+                const sliderParams = defaultValue?.split(':').map(p => p.trim()) || [];
+                element.defaultValue = sliderParams[0] || '50';
+
+                if (sliderParams.length >= 3) {
+                    // Custom min/max provided
+                    element.min = parseInt(sliderParams[1]) || 0;
+                    element.max = parseInt(sliderParams[2]) || 100;
+                } else {
+                    // Default min/max
+                    element.min = 0;
+                    element.max = 100;
+                }
                 break;
             case 'select':
                 element.options = defaultValue?.split('|').map(opt => opt.trim()) || [];
@@ -121,9 +131,19 @@ export function parseControlSyntax(content: string): ParsedControl[] {
                         element.defaultValue = defaultValue?.trim() || '';
                         break;
                     case 'slider':
-                        element.defaultValue = defaultValue?.trim() || '50';
-                        element.min = 0;
-                        element.max = 100;
+                        // Parse slider parameters: {{slider:name:default:min:max}}
+                        const sliderParams = defaultValue?.split(':').map(p => p.trim()) || [];
+                        element.defaultValue = sliderParams[0] || '50';
+
+                        if (sliderParams.length >= 3) {
+                            // Custom min/max provided
+                            element.min = parseInt(sliderParams[1]) || 0;
+                            element.max = parseInt(sliderParams[2]) || 100;
+                        } else {
+                            // Default min/max
+                            element.min = 0;
+                            element.max = 100;
+                        }
                         break;
                     case 'select':
                         element.options = defaultValue?.split('|').map(opt => opt.trim()) || [];
@@ -141,7 +161,8 @@ export function parseControlSyntax(content: string): ParsedControl[] {
         }
     }
 
-    // Do not add nested controls to the returned list; they are used only during rendering
+    // Add nested controls to the main controls list
+    controls.push(...nestedControls);
 
     // Remove duplicates and sort by start index
     const uniqueControls = controls.filter((control, index, self) => {
@@ -153,10 +174,9 @@ export function parseControlSyntax(content: string): ParsedControl[] {
             );
         }
 
-        // For other controls, use the standard duplicate check
+        // For other controls, keep only the first instance of each unique name+type combination
+        // This allows multiple instances of the same control name to be controlled by one UI control
         return index === self.findIndex(c =>
-            c.startIndex === control.startIndex &&
-            c.endIndex === control.endIndex &&
             c.element.name === control.element.name &&
             c.element.type === control.element.type
         );
@@ -172,51 +192,68 @@ export function renderPrompt(
 ): string {
     let result = content;
 
-    // Process controls in reverse order to maintain indices
-    for (let i = controls.length - 1; i >= 0; i--) {
-        const control = controls[i];
+    // First, handle toggle controls (they need special processing)
+    const toggleControls = controls.filter(c => c.element.type === 'toggle');
+    for (let i = toggleControls.length - 1; i >= 0; i--) {
+        const control = toggleControls[i];
         const value = values[control.element.name];
 
-        if (control.element.type === 'toggle') {
-            // For toggles, include or exclude the content based on value
-            if (value) {
-                // Process nested controls within the toggle content
-                const nestedControls = controls.filter(c =>
-                    c.startIndex > control.startIndex &&
-                    c.endIndex < control.endIndex &&
-                    c.element.type !== 'toggle'
-                );
-                let processedContent = control.content;
+        if (value) {
+            // Process nested controls within the toggle content
+            const nestedControls = controls.filter(c =>
+                c.startIndex > control.startIndex &&
+                c.endIndex < control.endIndex &&
+                c.element.type !== 'toggle'
+            );
+            let processedContent = control.content;
 
-                // Process nested controls in reverse order
-                for (let j = nestedControls.length - 1; j >= 0; j--) {
-                    const nestedControl = nestedControls[j];
-                    const nestedValue = values[nestedControl.element.name];
-                    const replacement = nestedValue !== undefined ? String(nestedValue) : nestedControl.element.defaultValue || '';
+            // Process nested controls in reverse order
+            for (let j = nestedControls.length - 1; j >= 0; j--) {
+                const nestedControl = nestedControls[j];
+                const nestedValue = values[nestedControl.element.name];
+                const replacement = nestedValue !== undefined ? String(nestedValue) : nestedControl.element.defaultValue || '';
 
-                    // Adjust indices to be relative to the toggle content
-                    const relativeStart = nestedControl.startIndex - control.startIndex;
-                    const relativeEnd = nestedControl.endIndex - control.startIndex;
+                // Adjust indices to be relative to the toggle content
+                const relativeStart = nestedControl.startIndex - control.startIndex;
+                const relativeEnd = nestedControl.endIndex - control.startIndex;
 
-                    processedContent = (processedContent || '').slice(0, relativeStart) +
-                        replacement +
-                        (processedContent || '').slice(relativeEnd);
-                }
-
-                result = result.slice(0, control.startIndex) +
-                    processedContent +
-                    result.slice(control.endIndex);
-            } else {
-                result = result.slice(0, control.startIndex) +
-                    result.slice(control.endIndex);
+                processedContent = (processedContent || '').slice(0, relativeStart) +
+                    replacement +
+                    (processedContent || '').slice(relativeEnd);
             }
-        } else {
-            // For other controls, replace with the current value
-            const replacement = value !== undefined ? String(value) : control.element.defaultValue || '';
+
             result = result.slice(0, control.startIndex) +
-                replacement +
+                processedContent +
+                result.slice(control.endIndex);
+        } else {
+            result = result.slice(0, control.startIndex) +
                 result.slice(control.endIndex);
         }
+    }
+
+    // Then, handle all other control types by replacing ALL instances of each control name
+    const nonToggleControls = controls.filter(c => c.element.type !== 'toggle');
+
+    // Group controls by name+type to get unique control definitions
+    const uniqueControlDefs = nonToggleControls.filter((control, index, self) =>
+        index === self.findIndex(c =>
+            c.element.name === control.element.name &&
+            c.element.type === control.element.type
+        )
+    );
+
+    // Replace all instances of each control name
+    for (const controlDef of uniqueControlDefs) {
+        const value = values[controlDef.element.name];
+        const replacement = value !== undefined ? String(value) : controlDef.element.defaultValue || '';
+
+        // Create regex to find all instances of this control
+        const controlRegex = new RegExp(
+            `\\{\\{${controlDef.element.type}:${controlDef.element.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?::([^}]*?))?\\}\\}`,
+            'g'
+        );
+
+        result = result.replace(controlRegex, replacement);
     }
 
     return result;

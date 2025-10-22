@@ -15,12 +15,13 @@ interface EditorState {
     versions: Version[];
 
     // UI state (persisted)
-    uiCollapsedByElementId: Record<string, { text: boolean; controls: boolean }>;
+    uiCollapsedByElementId: Record<string, { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }>;
     uiHelpPanelExpanded: boolean;
     uiPreviewPanelExpanded: boolean;
     uiPanelLayout?: { left: number; right: number };
     uiGlobalControlValues: Record<string, any>;
     uiTextEditorHeight: Record<string, number>; // elementId -> height in pixels
+    uiShowFavourites: boolean;
 
     // Actions
     setPreviewMode: (mode: 'clean' | 'raw') => void;
@@ -31,13 +32,14 @@ interface EditorState {
     updateStructure: (newStructure: StructuralElement[]) => void;
 
     // UI actions
-    setUiCollapsedForElement: (id: string, collapsed: { text: boolean; controls: boolean }) => void;
+    setUiCollapsedForElement: (id: string, collapsed: { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }) => void;
     setUiHelpPanelExpanded: (expanded: boolean) => void;
     setUiPreviewPanelExpanded: (expanded: boolean) => void;
     setUiPanelLayout: (layout: { left: number; right: number } | undefined) => void;
     setUiGlobalControlValues: (values: Record<string, any>) => void;
-    setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean }>) => void;
+    setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }>) => void;
     setUiTextEditorHeight: (elementId: string, height: number) => void;
+    setUiShowFavourites: (show: boolean) => void;
 
     // Project management
     addProject: (project: Project) => void;
@@ -60,9 +62,10 @@ interface EditorState {
     setVersions: (versions: Version[]) => void;
 
     // Utility functions
-    saveCurrentPrompt: () => void;
+    saveCurrentPrompt: (isAutoSave?: boolean) => void;
     loadPromptVersion: (versionId: string) => void;
     createNewVersion: () => void;
+    cleanupOldAutoSaves: () => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -101,6 +104,7 @@ export const useEditorStore = create<EditorState>()(
             uiPanelLayout: undefined,
             uiGlobalControlValues: {},
             uiTextEditorHeight: {},
+            uiShowFavourites: true,
 
             // Preview mode
             setPreviewMode: (mode) => set({ previewMode: mode }),
@@ -153,6 +157,7 @@ export const useEditorStore = create<EditorState>()(
                 set((state) => ({
                     uiTextEditorHeight: { ...state.uiTextEditorHeight, [elementId]: height },
                 })),
+            setUiShowFavourites: (show) => set({ uiShowFavourites: show }),
 
             // Project management
             addProject: (project) =>
@@ -221,7 +226,7 @@ export const useEditorStore = create<EditorState>()(
             setVersions: (versions) => set({ versions }),
 
             // Utility functions
-            saveCurrentPrompt: () => {
+            saveCurrentPrompt: (isAutoSave: boolean = false) => {
                 const state = get();
                 if (!state.currentPrompt) return;
 
@@ -231,16 +236,35 @@ export const useEditorStore = create<EditorState>()(
                     promptId: state.currentPrompt.id,
                     createdAt: new Date().toISOString(),
                     structure: [...state.structure],
+                    isAutoSave,
                 };
 
-                // Add the version
-                state.addVersion(newVersion);
+                if (isAutoSave) {
+                    // For auto-save: replace the last auto-save if it exists
+                    const existingAutoSave = state.versions.find(v =>
+                        v.promptId === state.currentPrompt!.id && v.isAutoSave === true
+                    );
 
-                // Update the prompt's current version
-                state.updatePrompt(state.currentPrompt.id, {
-                    currentVersion: newVersion.id,
-                    versions: [...(state.currentPrompt.versions || []), newVersion.id],
-                });
+                    if (existingAutoSave) {
+                        // Update the existing auto-save instead of creating a new one
+                        state.updateVersion(existingAutoSave.id, {
+                            structure: [...state.structure],
+                            createdAt: new Date().toISOString(),
+                        });
+                    } else {
+                        // No existing auto-save, create a new one
+                        state.addVersion(newVersion);
+                    }
+                } else {
+                    // For manual save: always create a new version
+                    state.addVersion(newVersion);
+
+                    // Update the prompt's current version
+                    state.updatePrompt(state.currentPrompt.id, {
+                        currentVersion: newVersion.id,
+                        versions: [...(state.currentPrompt.versions || []), newVersion.id],
+                    });
+                }
             },
 
             loadPromptVersion: (versionId) => {
@@ -256,7 +280,27 @@ export const useEditorStore = create<EditorState>()(
                 if (!state.currentPrompt) return;
 
                 // Save current state as new version
-                state.saveCurrentPrompt();
+                state.saveCurrentPrompt(false); // Manual save
+            },
+
+            // Clean up old auto-saves (keep only the latest one per prompt)
+            cleanupOldAutoSaves: () => {
+                const state = get();
+                const promptIds = [...new Set(state.versions.map(v => v.promptId))];
+
+                promptIds.forEach(promptId => {
+                    const autoSaves = state.versions
+                        .filter(v => v.promptId === promptId && v.isAutoSave === true)
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+                    // Keep only the latest auto-save, delete the rest
+                    if (autoSaves.length > 1) {
+                        const toDelete = autoSaves.slice(1);
+                        toDelete.forEach(autoSave => {
+                            state.deleteVersion(autoSave.id);
+                        });
+                    }
+                });
             },
         }),
         {
@@ -276,6 +320,7 @@ export const useEditorStore = create<EditorState>()(
                 uiPanelLayout: state.uiPanelLayout,
                 uiGlobalControlValues: state.uiGlobalControlValues,
                 uiTextEditorHeight: state.uiTextEditorHeight,
+                uiShowFavourites: state.uiShowFavourites,
             }),
         }
     )

@@ -27,10 +27,29 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
         );
     }
 
+    // Helper function to check if a control should be visible
+    const isControlVisible = (control: any) => {
+        // Find the parent toggle for this control
+        const parentToggle = controls.find(c =>
+            c.element.type === 'toggle' &&
+            c.startIndex < control.startIndex &&
+            c.endIndex > control.endIndex
+        );
+
+        // If there's no parent toggle, show the control
+        if (!parentToggle) return true;
+
+        // If there's a parent toggle, only show if it's enabled
+        return !!controlValues[parentToggle.element.name];
+    };
+
     return (
         <div className="field-stack section-vpad">
             {controls.map((control) => {
                 const currentValue = controlValues[control.element.name] ?? control.element.defaultValue;
+
+                // Skip rendering if control is not visible
+                if (!isControlVisible(control)) return null;
 
                 switch (control.element.type) {
                     case 'text':
@@ -86,7 +105,9 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                         );
 
                     case 'slider':
-                        const sliderValue = parseInt(currentValue) || parseInt(control.element.defaultValue || '50');
+                        const sliderValue = currentValue !== undefined && currentValue !== null
+                            ? parseInt(String(currentValue))
+                            : parseInt(control.element.defaultValue || '50');
                         return (
                             <div key={control.element.name} className="field-stack">
                                 <Label htmlFor={control.element.name} className="text-xs">

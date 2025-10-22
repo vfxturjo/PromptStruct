@@ -1,14 +1,15 @@
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ControlPanel } from './ControlPanel';
-import { EnhancedTextarea } from './EnhancedTextarea';
+import { EnhancedTextarea, EnhancedTextareaRef } from './EnhancedTextarea';
 import { StructuralElement } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import { GripVertical, Trash2, ChevronDown, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronRight, Eye, EyeOff, Edit2 } from 'lucide-react';
 
 interface StructuralElementCardProps {
     element: StructuralElement;
@@ -17,11 +18,17 @@ interface StructuralElementCardProps {
     onToggle: (id: string) => void;
     controlValues: Record<string, any>;
     onControlChange: (name: string, value: any) => void;
-    collapsed: { text: boolean; controls: boolean };
-    onCollapsedChange: (collapsed: { text: boolean; controls: boolean }) => void;
+    collapsed: { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } };
+    onCollapsedChange: (collapsed: { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }) => void;
+    highlighted?: boolean;
 }
 
-export function StructuralElementCard({
+export interface StructuralElementCardRef {
+    focusTextarea: () => void;
+    setTextareaSelectionRange: (start: number, end: number) => void;
+}
+
+export const StructuralElementCard = forwardRef<StructuralElementCardRef, StructuralElementCardProps>(({
     element,
     onUpdate,
     onDelete,
@@ -29,8 +36,21 @@ export function StructuralElementCard({
     controlValues,
     onControlChange,
     collapsed,
-    onCollapsedChange
-}: StructuralElementCardProps) {
+    onCollapsedChange,
+    highlighted = false
+}, ref) => {
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [editingName, setEditingName] = useState(element.name);
+    const textareaRef = useRef<EnhancedTextareaRef>(null);
+
+    // Expose methods to parent components
+    useImperativeHandle(ref, () => ({
+        focusTextarea: () => textareaRef.current?.focus(),
+        setTextareaSelectionRange: (start: number, end: number) => {
+            textareaRef.current?.setSelectionRange(start, end);
+        },
+    }));
+
     const isTextExpanded = !collapsed.text;
     const isControlsExpanded = !collapsed.controls;
 
@@ -40,6 +60,52 @@ export function StructuralElementCard({
 
     const handleControlsToggle = () => {
         onCollapsedChange({ ...collapsed, controls: !collapsed.controls });
+    };
+
+    const handleNameClick = () => {
+        const isCurrentlyExpanded = isTextExpanded || isControlsExpanded;
+
+        if (isCurrentlyExpanded) {
+            // Currently expanded - collapse to neither visible
+            onCollapsedChange({
+                text: true,
+                controls: true,
+                lastExpandedState: { text: isTextExpanded, controls: isControlsExpanded }
+            });
+        } else {
+            // Currently collapsed - restore to last expanded state or default to both
+            const lastState = collapsed.lastExpandedState || { text: true, controls: true };
+            onCollapsedChange({
+                text: !lastState.text,
+                controls: !lastState.controls,
+                lastExpandedState: lastState
+            });
+        }
+    };
+
+    const handleRenameClick = () => {
+        setIsEditingName(true);
+        setEditingName(element.name);
+    };
+
+    const handleRenameSave = () => {
+        if (editingName.trim()) {
+            onUpdate(element.id, { name: editingName.trim() });
+        }
+        setIsEditingName(false);
+    };
+
+    const handleRenameCancel = () => {
+        setEditingName(element.name);
+        setIsEditingName(false);
+    };
+
+    const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleRenameSave();
+        } else if (e.key === 'Escape') {
+            handleRenameCancel();
+        }
     };
 
     const {
@@ -59,8 +125,8 @@ export function StructuralElementCard({
 
 
     return (
-        <div ref={setNodeRef} style={style} className="">
-            <Card className={`transition-opacity ${!element.enabled ? 'opacity-50' : ''} dark:bg-neutral-800`}>
+        <div ref={setNodeRef} style={style} className="" data-element-card-id={element.id}>
+            <Card className={`transition-all duration-200 ${!element.enabled ? 'opacity-50' : ''} ${highlighted ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' : ''} dark:bg-neutral-800`}>
                 <CardHeader className="card-header-sizing" style={{ minHeight: 'var(--card-header-height)' }}>
                     <div className="card-toolbar">
                         <div
@@ -70,13 +136,36 @@ export function StructuralElementCard({
                         >
                             <GripVertical className="w-4 h-4" />
                         </div>
-                        <Input
-                            type="text"
-                            value={element.name}
-                            onChange={(e) => onUpdate(element.id, { name: e.target.value })}
-                            placeholder="Element name..."
-                            className="flex-1 font-semibold"
-                        />
+                        {isEditingName ? (
+                            <Input
+                                type="text"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onBlur={handleRenameSave}
+                                onKeyDown={handleRenameKeyDown}
+                                placeholder="Element name..."
+                                className="flex-1 font-semibold"
+                                autoFocus
+                            />
+                        ) : (
+                            <span
+                                className="flex-1 font-semibold cursor-pointer px-3 py-2 hover:bg-accent rounded"
+                                onClick={handleNameClick}
+                            >
+                                {element.name}
+                            </span>
+                        )}
+                        {!isEditingName && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleRenameClick}
+                                className="text-muted-foreground hover:text-foreground"
+                                title="Rename element"
+                            >
+                                <Edit2 className="w-4 h-4" />
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="sm"
@@ -120,6 +209,7 @@ export function StructuralElementCard({
                         <Collapsible open={isTextExpanded} onOpenChange={(open) => onCollapsedChange({ ...collapsed, text: !open })}>
                             <CollapsibleContent className="collapsible-content">
                                 <EnhancedTextarea
+                                    ref={textareaRef}
                                     value={element.content}
                                     onChange={(e) => onUpdate(element.id, { content: e.target.value })}
                                     placeholder="Enter your prompt content here..."
@@ -146,4 +236,6 @@ export function StructuralElementCard({
             </Card>
         </div>
     );
-}
+});
+
+StructuralElementCard.displayName = 'StructuralElementCard';

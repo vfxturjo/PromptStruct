@@ -5,10 +5,16 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    server: {
+        port: 4173,
+        host: true
+    },
     plugins: [
         react(),
         VitePWA({
+            strategies: 'generateSW',
             registerType: 'autoUpdate',
+            injectRegister: 'auto',
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
             manifest: {
                 name: 'PromptStruct - Structured Prompt Builder',
@@ -41,6 +47,12 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+                navigateFallback: 'index.html',
+                navigateFallbackDenylist: [/^\/api/],
+                skipWaiting: true,
+                clientsClaim: true,
+                cleanupOutdatedCaches: true,
+                maximumFileSizeToCacheInBytes: 10000000, // 10MB
                 runtimeCaching: [
                     {
                         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

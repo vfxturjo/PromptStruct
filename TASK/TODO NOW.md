@@ -1,0 +1,6 @@
+1. Google account login. user's full project will be synced to google account. It will be stored inside google account.
+2. "Double click in the preview window to go to the text editor in structure editor" feature currently tries to place the cursor to the specific corresponding position. The implementation is broken and unstable. remove the logic to place the cursor to specific position. Just placing it to the start is enough.
+3. in browser window, implement the panel-like system like the prompt editor window too. There will be 3 panels:
+   - Projects panel: currently implemented. make it a panel.
+   - Prompts panel: Shows prompts in currently selected project. currently implemented. make it a panel
+   - Preview panel: not yet created. it will let user use the prompt directly. it will have a mini structure editor, which will load the state of latest open things which was in the editor of the prompt, and a preview window. The preview will only show the clean output, so no need to add the raw button. you can use existing implementation of the

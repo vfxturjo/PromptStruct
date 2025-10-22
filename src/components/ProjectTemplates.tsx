@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FileText, Download, Trash2, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Download, Trash2, Star, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 
 interface ProjectTemplate {
     id: string;
@@ -52,6 +52,8 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
         category: 'general',
         tags: []
     });
+    const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(new Set());
+    const [bulkMode, setBulkMode] = useState(false);
 
     // Built-in templates
     const builtInTemplates: ProjectTemplate[] = [
@@ -280,6 +282,88 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
         URL.revokeObjectURL(url);
     };
 
+    const handleBulkExportTemplates = () => {
+        if (selectedTemplates.size === 0) return;
+
+        const selectedTemplateData = templates.filter(t => selectedTemplates.has(t.id));
+        const exportData = {
+            templates: selectedTemplateData,
+            exportedAt: new Date().toISOString(),
+            count: selectedTemplateData.length
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `bulk_templates_${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleTemplateSelect = (templateId: string) => {
+        const newSelected = new Set(selectedTemplates);
+        if (newSelected.has(templateId)) {
+            newSelected.delete(templateId);
+        } else {
+            newSelected.add(templateId);
+        }
+        setSelectedTemplates(newSelected);
+    };
+
+    const handleImportTemplates = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target?.result as string);
+                let importedTemplates: ProjectTemplate[] = [];
+
+                // Detect import format
+                if (data.templates && Array.isArray(data.templates)) {
+                    // Bulk template export
+                    importedTemplates = data.templates;
+                } else if (data.id && data.name) {
+                    // Single template export
+                    importedTemplates = [data];
+                } else {
+                    alert('Invalid template file format');
+                    return;
+                }
+
+                // Merge with existing templates (avoid duplicates by ID)
+                const mergedTemplates = [...templates];
+                importedTemplates.forEach((importedTemplate: ProjectTemplate) => {
+                    const existingIndex = mergedTemplates.findIndex(t => t.id === importedTemplate.id);
+                    if (existingIndex >= 0) {
+                        // Update existing template
+                        mergedTemplates[existingIndex] = { ...mergedTemplates[existingIndex], ...importedTemplate };
+                    } else {
+                        // Add new template
+                        mergedTemplates.push(importedTemplate);
+                    }
+                });
+
+                setTemplates(mergedTemplates);
+
+                // Save to localStorage (excluding built-in templates)
+                const customTemplates = mergedTemplates.filter(t => !t.isBuiltIn);
+                localStorage.setItem('promptstruct-project-templates', JSON.stringify(customTemplates));
+
+                alert(`Imported ${importedTemplates.length} template${importedTemplates.length > 1 ? 's' : ''} successfully!`);
+            } catch (error) {
+                alert(`Import failed: ${error}`);
+            }
+        };
+        reader.readAsText(file);
+
+        // Reset file input
+        event.target.value = '';
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -315,7 +399,47 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setBulkMode(!bulkMode);
+                                setSelectedTemplates(new Set());
+                            }}
+                        >
+                            {bulkMode ? "Exit Bulk" : "Bulk Mode"}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => document.getElementById('import-templates')?.click()}
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import
+                        </Button>
+                        <input
+                            id="import-templates"
+                            type="file"
+                            accept=".json"
+                            onChange={handleImportTemplates}
+                            className="hidden"
+                        />
                     </div>
+
+                    {/* Bulk Actions */}
+                    {bulkMode && selectedTemplates.size > 0 && (
+                        <div className="flex items-center gap-2 p-3 bg-muted/50 rounded">
+                            <span className="text-sm">
+                                {selectedTemplates.size} template{selectedTemplates.size > 1 ? 's' : ''} selected
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleBulkExportTemplates}
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Export Selected
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Create Template Form */}
                     <Collapsible open={showCreateForm} onOpenChange={setShowCreateForm}>
@@ -392,6 +516,14 @@ export function ProjectTemplates({ isOpen, onClose, onCreateFromTemplate }: Proj
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <h4 className="text-lg font-semibold flex items-center gap-2">
+                                                {bulkMode && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedTemplates.has(template.id)}
+                                                        onChange={() => handleTemplateSelect(template.id)}
+                                                        className="rounded"
+                                                    />
+                                                )}
                                                 {template.name}
                                                 {template.isBuiltIn && (
                                                     <Star className="w-4 h-4 text-yellow-500" />

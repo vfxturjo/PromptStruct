@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/stores/editorStore';
 
@@ -10,6 +10,13 @@ interface EnhancedTextareaProps {
     elementId?: string; // ID of the structural element for height persistence
 }
 
+export interface EnhancedTextareaRef {
+    focus: () => void;
+    setSelectionRange: (start: number, end: number) => void;
+    getSelectionStart: () => number;
+    getSelectionEnd: () => number;
+}
+
 const CONTROL_TEMPLATES = {
     text: '{{text:Name:Default}}',
     select: '{{select:Name:Option1|Option2|Option3}}',
@@ -17,253 +24,242 @@ const CONTROL_TEMPLATES = {
     toggle: '{{toggle:Name}}content{{/toggle:Name}}'
 };
 
-export function EnhancedTextarea({ value, onChange, placeholder, className, elementId }: EnhancedTextareaProps) {
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0 });
-    const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
-    const editorRef = useRef<HTMLDivElement>(null);
-    const suggestionRef = useRef<HTMLDivElement>(null);
-    const [isComposing, setIsComposing] = useState(false);
+export const EnhancedTextarea = forwardRef<EnhancedTextareaRef, EnhancedTextareaProps>(
+    ({ value, onChange, placeholder, className, elementId }, ref) => {
+        const [showSuggestions, setShowSuggestions] = useState(false);
+        const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0 });
+        const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+        const textareaRef = useRef<HTMLTextAreaElement>(null);
+        const suggestionRef = useRef<HTMLDivElement>(null);
 
-    // Get and set text editor height from store
-    const { uiTextEditorHeight, setUiTextEditorHeight } = useEditorStore();
-    const savedHeight = elementId ? uiTextEditorHeight[elementId] : null;
+        // Get and set text editor height from store
+        const { uiTextEditorHeight, setUiTextEditorHeight } = useEditorStore();
+        const savedHeight = elementId ? uiTextEditorHeight[elementId] : null;
 
-    // Ensure value is always a string
-    const safeValue = value || '';
+        // Expose methods to parent components
+        useImperativeHandle(ref, () => ({
+            focus: () => textareaRef.current?.focus(),
+            setSelectionRange: (start: number, end: number) => {
+                if (textareaRef.current) {
+                    textareaRef.current.setSelectionRange(start, end);
+                }
+            },
+            getSelectionStart: () => textareaRef.current?.selectionStart || 0,
+            getSelectionEnd: () => textareaRef.current?.selectionEnd || 0,
+        }));
 
-    // Update content when value changes externally
-    useEffect(() => {
-        if (editorRef.current && !isComposing) {
-            const currentText = editorRef.current.textContent || '';
-            if (currentText !== safeValue) {
-                updateEditorContent();
-            }
-        }
-    }, [safeValue, isComposing]);
+        // Check if we should show suggestions based on cursor position
+        const checkForSuggestions = useCallback(() => {
+            if (!textareaRef.current) return;
 
+            const cursorPosition = textareaRef.current.selectionStart;
+            const textBeforeCursor = value.slice(0, cursorPosition);
 
-    // Update editor content - NO syntax highlighting to avoid layout issues
-    const updateEditorContent = useCallback(() => {
-        if (!editorRef.current) return;
+            // Check if we just typed {{
+            const lastOpenBrace = textBeforeCursor.lastIndexOf('{{');
+            if (lastOpenBrace !== -1) {
+                const textAfterOpenBrace = textBeforeCursor.slice(lastOpenBrace + 2);
+                const closeBrace = textAfterOpenBrace.indexOf('}}');
 
-        // Simply set text content without any HTML or spans
-        editorRef.current.textContent = safeValue;
-    }, [safeValue]);
-
-
-    // Handle content changes
-    const handleInput = useCallback(() => {
-        setIsComposing(true);
-
-        if (!editorRef.current) return;
-
-        const newValue = editorRef.current.textContent || '';
-        onChange({ target: { value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>);
-
-        // Check if we should show suggestions
-        setTimeout(() => {
-            checkForSuggestions();
-            setIsComposing(false);
-        }, 0);
-    }, [onChange]);
-
-    // Check if we should show suggestions based on cursor position
-    const checkForSuggestions = useCallback(() => {
-        if (!editorRef.current) return;
-
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
-
-        const range = selection.getRangeAt(0);
-        const textBeforeCursor = getTextBeforeCursor(range);
-
-        // Check if we just typed {{
-        const lastOpenBrace = textBeforeCursor.lastIndexOf('{{');
-        if (lastOpenBrace !== -1) {
-            const textAfterOpenBrace = textBeforeCursor.slice(lastOpenBrace + 2);
-            const closeBrace = textAfterOpenBrace.indexOf('}}');
-
-            if (closeBrace === -1) {
-                // We're inside a control, show suggestions
-                showSuggestionDropdown(range);
+                if (closeBrace === -1) {
+                    // We're inside a control, show suggestions
+                    showSuggestionDropdown();
+                } else {
+                    setShowSuggestions(false);
+                }
             } else {
                 setShowSuggestions(false);
             }
-        } else {
+        }, [value]);
+
+        // Show suggestion dropdown at cursor position
+        const showSuggestionDropdown = () => {
+            if (!textareaRef.current) return;
+
+            const textarea = textareaRef.current;
+            const cursorPosition = textarea.selectionStart;
+
+            // Create a temporary span to measure text position
+            const span = document.createElement('span');
+            span.style.position = 'absolute';
+            span.style.visibility = 'hidden';
+            span.style.whiteSpace = 'pre-wrap';
+            span.style.font = window.getComputedStyle(textarea).font;
+            span.style.padding = window.getComputedStyle(textarea).padding;
+            span.style.border = window.getComputedStyle(textarea).border;
+            span.style.width = window.getComputedStyle(textarea).width;
+
+            const textBeforeCursor = value.slice(0, cursorPosition);
+            span.textContent = textBeforeCursor;
+
+            document.body.appendChild(span);
+            const rect = span.getBoundingClientRect();
+            const textareaRect = textarea.getBoundingClientRect();
+
+            setSuggestionPosition({
+                top: textareaRect.top + rect.height + 5,
+                left: textareaRect.left + rect.width
+            });
+
+            document.body.removeChild(span);
+            setShowSuggestions(true);
+            setSelectedSuggestionIndex(0);
+        };
+
+        // Insert template at cursor position
+        const insertTemplate = (template: string) => {
+            if (!textareaRef.current) return;
+
+            const textarea = textareaRef.current;
+            const cursorPosition = textarea.selectionStart;
+            const textBeforeCursor = value.slice(0, cursorPosition);
+            const lastOpenBrace = textBeforeCursor.lastIndexOf('{{');
+
+            if (lastOpenBrace !== -1) {
+                // Replace the {{... with the template
+                const newValue = value.slice(0, lastOpenBrace) + template + value.slice(cursorPosition);
+                onChange({ target: { value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>);
+
+                // Set cursor position after the inserted template
+                setTimeout(() => {
+                    const newCursorPosition = lastOpenBrace + template.length;
+                    textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+                }, 0);
+            }
+
             setShowSuggestions(false);
-        }
-    }, []);
+            textarea.focus();
+        };
 
-    // Get text before cursor position
-    const getTextBeforeCursor = (range: Range): string => {
-        const textNode = range.startContainer;
-        const text = textNode.textContent || '';
-        const offset = range.startOffset;
+        // Handle keyboard events
+        const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+            if (showSuggestions) {
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        setSelectedSuggestionIndex(prev =>
+                            prev < Object.keys(CONTROL_TEMPLATES).length - 1 ? prev + 1 : 0
+                        );
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        setSelectedSuggestionIndex(prev =>
+                            prev > 0 ? prev - 1 : Object.keys(CONTROL_TEMPLATES).length - 1
+                        );
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        const templates = Object.values(CONTROL_TEMPLATES);
+                        insertTemplate(templates[selectedSuggestionIndex]);
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        setShowSuggestions(false);
+                        break;
+                }
+            }
+        };
 
-        if (textNode.nodeType === Node.TEXT_NODE) {
-            return text.slice(0, offset);
-        }
+        // Handle input changes
+        const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+            onChange(e);
 
-        return text.slice(0, offset);
-    };
+            // Check for suggestions after a short delay
+            setTimeout(() => {
+                checkForSuggestions();
+            }, 0);
+        };
 
-    // Show suggestion dropdown at cursor position
-    const showSuggestionDropdown = (range: Range) => {
-        const rect = range.getBoundingClientRect();
-        const editorRect = editorRef.current?.getBoundingClientRect();
-
-        if (!editorRect) return;
-
-        setSuggestionPosition({
-            top: rect.bottom + 5,
-            left: rect.left
-        });
-        setShowSuggestions(true);
-        setSelectedSuggestionIndex(0);
-    };
-
-    // Insert template at cursor position
-    const insertTemplate = (template: string) => {
-        if (!editorRef.current) return;
-
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
-
-        const range = selection.getRangeAt(0);
-
-        // Find the {{ that triggered the suggestion
-        const textBeforeCursor = getTextBeforeCursor(range);
-        const lastOpenBrace = textBeforeCursor.lastIndexOf('{{');
-
-        if (lastOpenBrace !== -1) {
-            // Update the value
-            const newValue = safeValue.slice(0, safeValue.indexOf(textBeforeCursor) + lastOpenBrace) + template + safeValue.slice(safeValue.indexOf(textBeforeCursor) + range.startOffset);
-            onChange({ target: { value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>);
-        }
-
-        setShowSuggestions(false);
-        editorRef.current.focus();
-    };
-
-    // Handle keyboard events
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (showSuggestions) {
-            switch (e.key) {
-                case 'ArrowDown':
-                    e.preventDefault();
-                    setSelectedSuggestionIndex(prev =>
-                        prev < Object.keys(CONTROL_TEMPLATES).length - 1 ? prev + 1 : 0
-                    );
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    setSelectedSuggestionIndex(prev =>
-                        prev > 0 ? prev - 1 : Object.keys(CONTROL_TEMPLATES).length - 1
-                    );
-                    break;
-                case 'Enter':
-                    e.preventDefault();
-                    const templates = Object.values(CONTROL_TEMPLATES);
-                    insertTemplate(templates[selectedSuggestionIndex]);
-                    break;
-                case 'Escape':
-                    e.preventDefault();
+        // Handle clicks outside to close suggestions
+        useEffect(() => {
+            const handleClickOutside = (event: MouseEvent) => {
+                if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
                     setShowSuggestions(false);
-                    break;
-            }
-        }
-    };
+                }
+            };
 
-    // Handle clicks outside to close suggestions
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
-                setShowSuggestions(false);
-            }
-        };
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }, []);
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        // Handle text editor resize to save height
+        const handleResize = useCallback(() => {
+            if (!textareaRef.current || !elementId) return;
 
-    // Handle text editor resize to save height
-    const handleResize = useCallback(() => {
-        if (!editorRef.current || !elementId) return;
+            const height = textareaRef.current.offsetHeight;
+            setUiTextEditorHeight(elementId, height);
+        }, [elementId, setUiTextEditorHeight]);
 
-        const height = editorRef.current.offsetHeight;
-        setUiTextEditorHeight(elementId, height);
-    }, [elementId, setUiTextEditorHeight]);
+        // Set up resize observer to detect height changes
+        useEffect(() => {
+            if (!textareaRef.current || !elementId) return;
 
-    // Set up resize observer to detect height changes
-    useEffect(() => {
-        if (!editorRef.current || !elementId) return;
+            const resizeObserver = new ResizeObserver(() => {
+                handleResize();
+            });
 
-        const resizeObserver = new ResizeObserver(() => {
-            handleResize();
-        });
+            resizeObserver.observe(textareaRef.current);
 
-        resizeObserver.observe(editorRef.current);
+            return () => {
+                resizeObserver.disconnect();
+            };
+        }, [handleResize, elementId]);
 
-        return () => {
-            resizeObserver.disconnect();
-        };
-    }, [handleResize, elementId]);
-
-
-    return (
-        <div className="relative">
-            <div
-                ref={editorRef}
-                contentEditable
-                onInput={handleInput}
-                onKeyDown={handleKeyDown}
-                className={cn(
-                    "flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-mono text-sm whitespace-pre-wrap break-words overflow-auto text-editor-max-height",
-                    "empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none",
-                    className
-                )}
-                style={{
-                    minHeight: '80px',
-                    height: savedHeight ? `${savedHeight}px` : 'auto',
-                    resize: 'vertical'
-                }}
-                suppressContentEditableWarning={true}
-                data-placeholder={placeholder}
-            />
-
-            {/* Suggestions dropdown */}
-            {showSuggestions && (
-                <div
-                    ref={suggestionRef}
-                    className="absolute bg-background border rounded-md shadow-lg z-50 min-w-[280px] max-h-[300px] overflow-y-auto"
+        return (
+            <div className="relative">
+                <textarea
+                    ref={textareaRef}
+                    value={value}
+                    onChange={handleInput}
+                    onKeyDown={handleKeyDown}
+                    className={cn(
+                        "min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-mono text-sm whitespace-pre-wrap break-words overflow-auto text-editor-max-height resize-y",
+                        "placeholder:text-muted-foreground",
+                        className
+                    )}
                     style={{
-                        top: suggestionPosition.top,
-                        left: suggestionPosition.left,
+                        minHeight: '80px',
+                        height: savedHeight ? `${savedHeight}px` : 'auto',
                     }}
-                >
-                    <div className="p-2 text-xs text-muted-foreground border-b bg-muted/50">
-                        Dynamic Control Templates
+                    placeholder={placeholder}
+                    data-element-textarea-id={elementId}
+                />
+
+                {/* Suggestions dropdown */}
+                {showSuggestions && (
+                    <div
+                        ref={suggestionRef}
+                        className="absolute bg-background border rounded-md shadow-lg z-50 min-w-[280px] max-h-[300px] overflow-y-auto"
+                        style={{
+                            top: suggestionPosition.top,
+                            left: suggestionPosition.left,
+                        }}
+                    >
+                        <div className="p-2 text-xs text-muted-foreground border-b bg-muted/50">
+                            Dynamic Control Templates
+                        </div>
+                        {Object.entries(CONTROL_TEMPLATES).map(([type, template], index) => (
+                            <button
+                                key={type}
+                                className={cn(
+                                    "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground border-b last:border-b-0 transition-colors",
+                                    index === selectedSuggestionIndex && "bg-accent text-accent-foreground"
+                                )}
+                                onClick={() => insertTemplate(template)}
+                                onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                            >
+                                <div className="font-medium capitalize text-foreground">{type}</div>
+                                <div className="text-xs text-muted-foreground font-mono mt-1">{template}</div>
+                            </button>
+                        ))}
+                        <div className="p-2 text-xs text-muted-foreground bg-muted/30">
+                            Use ↑↓ to navigate, Enter to insert, Esc to close
+                        </div>
                     </div>
-                    {Object.entries(CONTROL_TEMPLATES).map(([type, template], index) => (
-                        <button
-                            key={type}
-                            className={cn(
-                                "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground border-b last:border-b-0 transition-colors",
-                                index === selectedSuggestionIndex && "bg-accent text-accent-foreground"
-                            )}
-                            onClick={() => insertTemplate(template)}
-                            onMouseEnter={() => setSelectedSuggestionIndex(index)}
-                        >
-                            <div className="font-medium capitalize text-foreground">{type}</div>
-                            <div className="text-xs text-muted-foreground font-mono mt-1">{template}</div>
-                        </button>
-                    ))}
-                    <div className="p-2 text-xs text-muted-foreground bg-muted/30">
-                        Use ↑↓ to navigate, Enter to insert, Esc to close
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
+                )}
+            </div>
+        );
+    }
+);
+
+EnhancedTextarea.displayName = 'EnhancedTextarea';
