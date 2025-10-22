@@ -35,7 +35,11 @@ export function MainLayout() {
         setUiGlobalControlValues,
         editorPanels,
         setEditorPanels,
-        versions
+        versions,
+        starredControls,
+        starredTextBoxes,
+        toggleStarControl,
+        toggleStarTextBox
     } = useEditorStore();
 
     const [showExportModal, setShowExportModal] = useState(false);
@@ -373,6 +377,10 @@ export function MainLayout() {
                                                             collapsed={uiCollapsedByElementId[element.id] || { text: true, controls: true }}
                                                             onCollapsedChange={(collapsed) => setUiCollapsedForElement(element.id, collapsed)}
                                                             highlighted={highlightedElementId === element.id}
+                                                            starredControls={starredControls}
+                                                            starredTextBoxes={starredTextBoxes}
+                                                            onToggleStarControl={toggleStarControl}
+                                                            onToggleStarTextBox={toggleStarTextBox}
                                                         />
                                                     ))
                                                 )}

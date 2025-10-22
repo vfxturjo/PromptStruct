@@ -28,10 +28,10 @@ describe('StructuralElementCard', () => {
         id: 'test-1',
         name: 'Test Element',
         enabled: true,
-        content: 'Test content with {{text:Name:Default}}'
+        content: 'Test content with {{text:Name:Default}} control'
     }
 
-    const mockHandlers = {
+    const defaultProps = {
         onUpdate: vi.fn(),
         onDelete: vi.fn(),
         onToggle: vi.fn(),
@@ -39,6 +39,10 @@ describe('StructuralElementCard', () => {
         onControlChange: vi.fn(),
         collapsed: { text: false, controls: false },
         onCollapsedChange: vi.fn(),
+        starredControls: {},
+        starredTextBoxes: [],
+        onToggleStarControl: vi.fn(),
+        onToggleStarTextBox: vi.fn()
     }
 
     beforeEach(() => {
@@ -46,86 +50,81 @@ describe('StructuralElementCard', () => {
     })
 
     it('should render element name', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        expect(screen.getByDisplayValue('Test Element')).toBeInTheDocument()
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        expect(screen.getByText('Test Element')).toBeInTheDocument()
     })
 
-    it('should render element content', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        // Check that the contenteditable div contains the text
-        const contentDiv = document.querySelector('[contenteditable="true"]')
-        expect(contentDiv).toBeInTheDocument()
-        expect(contentDiv?.textContent).toContain('Test content with {{text:Name:Default}}')
+    it('should render content textarea when text is expanded', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        expect(screen.getByDisplayValue('Test content with {{text:Name:Default}} control')).toBeInTheDocument()
     })
 
-    it('should show enabled state', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        const switchControl = screen.getByRole('switch')
-        expect(switchControl).toHaveAttribute('aria-checked', 'true')
-    })
-
-    it('should show disabled state', () => {
-        const disabledElement = { ...mockElement, enabled: false }
-        render(<StructuralElementCard element={disabledElement} {...mockHandlers} />)
-
-        const switchControl = screen.getByRole('switch')
-        expect(switchControl).toHaveAttribute('aria-checked', 'false')
-    })
-
-    it('should call onUpdate when name changes', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        const nameInput = screen.getByDisplayValue('Test Element')
-        fireEvent.change(nameInput, { target: { value: 'New Name' } })
-
-        expect(mockHandlers.onUpdate).toHaveBeenCalledWith('test-1', { name: 'New Name' })
+    it('should render controls when controls are expanded', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        expect(screen.getByText('Name')).toBeInTheDocument()
     })
 
     it('should call onUpdate when content changes', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        const contentDiv = document.querySelector('[contenteditable="true"]') as HTMLElement
-        expect(contentDiv).toBeInTheDocument()
-
-        // Simulate content change
-        contentDiv.textContent = 'New content'
-        fireEvent.input(contentDiv)
-
-        expect(mockHandlers.onUpdate).toHaveBeenCalledWith('test-1', { content: 'New content' })
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        const textarea = screen.getByDisplayValue('Test content with {{text:Name:Default}} control')
+        fireEvent.change(textarea, { target: { value: 'New content' } })
+        expect(defaultProps.onUpdate).toHaveBeenCalledWith('test-1', { content: 'New content' })
     })
 
-    it('should call onToggle when toggle is clicked', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        const switchControl = screen.getByRole('switch')
-        fireEvent.click(switchControl)
-
-        expect(mockHandlers.onToggle).toHaveBeenCalledWith('test-1')
+    it('should call onToggle when switch is clicked', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        const switchElement = screen.getByRole('switch')
+        fireEvent.click(switchElement)
+        expect(defaultProps.onToggle).toHaveBeenCalledWith('test-1')
     })
 
-    it('should call onDelete when delete button clicked', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        const deleteButton = screen.getByRole('button', { name: /trash/i })
+    it('should call onDelete when delete button is clicked', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        const deleteButton = screen.getByTitle('trash')
         fireEvent.click(deleteButton)
-
-        expect(mockHandlers.onDelete).toHaveBeenCalledWith('test-1')
+        expect(defaultProps.onDelete).toHaveBeenCalledWith('test-1')
     })
 
-    it('should render control panel for content with controls', () => {
-        render(<StructuralElementCard element={mockElement} {...mockHandlers} />)
-
-        // Should show the control panel with dynamic controls
-        expect(screen.getByText('Dynamic Controls')).toBeInTheDocument()
+    it('should show disabled state when element is disabled', () => {
+        const disabledElement = { ...mockElement, enabled: false }
+        render(<StructuralElementCard element={disabledElement} {...defaultProps} />)
+        const card = screen.getByText('Test Element').closest('.opacity-50')
+        expect(card).toBeInTheDocument()
     })
 
-    it('should show no controls message for content without controls', () => {
+    it('should show highlighted state when highlighted prop is true', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} highlighted={true} />)
+        const card = screen.getByText('Test Element').closest('.ring-2')
+        expect(card).toBeInTheDocument()
+    })
+
+    it('should call onCollapsedChange when text toggle is clicked', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        const textToggle = screen.getByTitle('Hide text area')
+        fireEvent.click(textToggle)
+        expect(defaultProps.onCollapsedChange).toHaveBeenCalledWith({ text: true, controls: false })
+    })
+
+    it('should call onCollapsedChange when controls toggle is clicked', () => {
+        render(<StructuralElementCard element={mockElement} {...defaultProps} />)
+        const controlsToggle = screen.getByTitle('Hide dynamic controls')
+        fireEvent.click(controlsToggle)
+        expect(defaultProps.onCollapsedChange).toHaveBeenCalledWith({ text: false, controls: true })
+    })
+
+    it('should handle element with no controls', () => {
         const elementWithoutControls = { ...mockElement, content: 'Simple text without controls' }
-        render(<StructuralElementCard element={elementWithoutControls} {...mockHandlers} />)
+        render(<StructuralElementCard element={elementWithoutControls} {...defaultProps} />)
+        expect(screen.getByText('Test Element')).toBeInTheDocument()
+        expect(screen.getByDisplayValue('Simple text without controls')).toBeInTheDocument()
+    })
 
-        expect(screen.getByText(/No dynamic controls found/)).toBeInTheDocument()
+    it('should handle collapsed state correctly', () => {
+        const collapsedProps = { ...defaultProps, collapsed: { text: true, controls: true } }
+        render(<StructuralElementCard element={mockElement} {...collapsedProps} />)
+        expect(screen.getByText('Test Element')).toBeInTheDocument()
+        // Content and controls should not be visible when collapsed
+        expect(screen.queryByDisplayValue('Test content with {{text:Name:Default}} control')).not.toBeInTheDocument()
+        expect(screen.queryByText('Name')).not.toBeInTheDocument()
     })
 })

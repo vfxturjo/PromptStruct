@@ -4,6 +4,13 @@ import { ControlPanel } from '@/components/ControlPanel'
 
 describe('ControlPanel', () => {
     const mockOnControlChange = vi.fn()
+    const mockOnToggleStarControl = vi.fn()
+
+    const defaultProps = {
+        elementId: 'test-element',
+        starredControls: {},
+        onToggleStarControl: mockOnToggleStarControl
+    }
 
     beforeEach(() => {
         vi.clearAllMocks()
@@ -15,6 +22,7 @@ describe('ControlPanel', () => {
                 content="Simple text without any controls"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -27,6 +35,7 @@ describe('ControlPanel', () => {
                 content="Hello {{text:Name:John}}!"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -40,6 +49,7 @@ describe('ControlPanel', () => {
                 content="Choose {{select:Genre:Fantasy|Sci-Fi|Mystery}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -53,6 +63,7 @@ describe('ControlPanel', () => {
                 content="Set {{slider:Creativity:75}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -66,6 +77,7 @@ describe('ControlPanel', () => {
                 content="{{toggle:Include_Details}}Show details{{/toggle:Include_Details}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -79,6 +91,7 @@ describe('ControlPanel', () => {
                 content="{{text:Name:John}} likes {{select:Genre:Fantasy|Sci-Fi}} with {{slider:Rating:50}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -93,6 +106,7 @@ describe('ControlPanel', () => {
                 content="Hello {{text:Name:John}}!"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -108,6 +122,7 @@ describe('ControlPanel', () => {
                 content="Choose {{select:Genre:Fantasy|Sci-Fi|Mystery}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -123,6 +138,7 @@ describe('ControlPanel', () => {
                 content="Set {{slider:Creativity:75}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -138,6 +154,7 @@ describe('ControlPanel', () => {
                 content="Hello {{text:Name:John}}!"
                 controlValues={{ Name: 'Alice' }}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 
@@ -150,6 +167,7 @@ describe('ControlPanel', () => {
                 content="{{toggle:Show_Details}}Name: {{text:Character:Hero}}{{/toggle:Show_Details}}"
                 controlValues={{}}
                 onControlChange={mockOnControlChange}
+                {...defaultProps}
             />
         )
 

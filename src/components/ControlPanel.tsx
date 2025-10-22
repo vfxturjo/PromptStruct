@@ -5,15 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Info, Star } from 'lucide-react';
 
 interface ControlPanelProps {
     content: string;
     controlValues: Record<string, any>;
     onControlChange: (name: string, value: any) => void;
+    elementId: string;
+    starredControls: Record<string, string[]>;
+    onToggleStarControl: (elementId: string, controlName: string) => void;
 }
 
-export function ControlPanel({ content, controlValues, onControlChange }: ControlPanelProps) {
+export function ControlPanel({ content, controlValues, onControlChange, elementId, starredControls, onToggleStarControl }: ControlPanelProps) {
     const controls = parseControlSyntax(content);
 
     if (controls.length === 0) {
@@ -47,14 +51,29 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
         <div className="field-stack section-vpad">
             {controls.map((control) => {
                 const currentValue = controlValues[control.element.name] ?? control.element.defaultValue;
+                const isStarred = starredControls[elementId]?.includes(control.element.name) || false;
 
                 // Skip rendering if control is not visible
                 if (!isControlVisible(control)) return null;
 
+                const StarButton = () => (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onToggleStarControl(elementId, control.element.name)}
+                        className={`absolute top-0 right-0 w-4 h-4 p-0 transition-opacity duration-200 ${isStarred ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                            }`}
+                        title={isStarred ? 'Remove from starred' : 'Add to starred'}
+                    >
+                        <Star className={`w-4 h-4 ${isStarred ? 'fill-current text-yellow-500' : 'text-muted-foreground hover:text-yellow-400'}`} />
+                    </Button>
+                );
+
                 switch (control.element.type) {
                     case 'text':
                         return (
-                            <div key={control.element.name} className="field-stack">
+                            <div key={control.element.name} className="field-stack relative group">
+                                <StarButton />
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}
                                 </Label>
@@ -71,7 +90,8 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
                     case 'select':
                         return (
-                            <div key={control.element.name} className="field-stack">
+                            <div key={control.element.name} className="field-stack relative group">
+                                <StarButton />
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}
                                 </Label>
@@ -109,7 +129,8 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
                             ? parseInt(String(currentValue))
                             : parseInt(control.element.defaultValue || '50');
                         return (
-                            <div key={control.element.name} className="field-stack">
+                            <div key={control.element.name} className="field-stack relative group">
+                                <StarButton />
                                 <Label htmlFor={control.element.name} className="text-xs">
                                     {control.element.name}: {sliderValue}
                                 </Label>
@@ -136,7 +157,8 @@ export function ControlPanel({ content, controlValues, onControlChange }: Contro
 
                     case 'toggle':
                         return (
-                            <div key={control.element.name} className="flex items-center space-x-2">
+                            <div key={control.element.name} className="flex items-center space-x-2 relative group">
+                                <StarButton />
                                 {/* Test-friendly hidden button (some tests look for a generic button role) */}
                                 <button
                                     type="button"

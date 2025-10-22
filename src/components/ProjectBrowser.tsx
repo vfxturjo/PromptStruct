@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TopBar } from './TopBar';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { MiniPreviewPanel } from './MiniPreviewPanel';
+import { DirectUsePanel } from './MiniPreviewPanel';
 import { Search, Plus, Upload, FileText, Settings, Download, X, Edit, Copy, FolderOpen, Calendar, Tag, Star } from 'lucide-react';
 
 export function ProjectBrowser() {
@@ -1051,7 +1051,7 @@ export function ProjectBrowser() {
 
                     <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={30} minSize={8} collapsible onCollapse={() => setBrowserPanels({ showDirectUsePreview: false })} onExpand={() => setBrowserPanels({ showDirectUsePreview: true })}>
-                        <MiniPreviewPanel />
+                        <DirectUsePanel />
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </div>

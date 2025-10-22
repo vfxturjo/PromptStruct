@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import { GripVertical, Trash2, ChevronDown, ChevronRight, Eye, EyeOff, Edit2 } from 'lucide-react';
+import { GripVertical, Trash2, ChevronDown, ChevronRight, Eye, EyeOff, Edit2, Star } from 'lucide-react';
 
 interface StructuralElementCardProps {
     element: StructuralElement;
@@ -21,6 +21,10 @@ interface StructuralElementCardProps {
     collapsed: { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } };
     onCollapsedChange: (collapsed: { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }) => void;
     highlighted?: boolean;
+    starredControls: Record<string, string[]>;
+    starredTextBoxes: string[];
+    onToggleStarControl: (elementId: string, controlName: string) => void;
+    onToggleStarTextBox: (elementId: string) => void;
 }
 
 export interface StructuralElementCardRef {
@@ -37,7 +41,11 @@ export const StructuralElementCard = forwardRef<StructuralElementCardRef, Struct
     onControlChange,
     collapsed,
     onCollapsedChange,
-    highlighted = false
+    highlighted = false,
+    starredControls,
+    starredTextBoxes,
+    onToggleStarControl,
+    onToggleStarTextBox
 }, ref) => {
     const [isEditingName, setIsEditingName] = useState(false);
     const [editingName, setEditingName] = useState(element.name);
@@ -119,7 +127,7 @@ export const StructuralElementCard = forwardRef<StructuralElementCardRef, Struct
 
     const style = {
         // Use translate-only to avoid scale being applied during drag which can stretch items
-        transform: transform ? CSS.Translate.toString({ x: transform.x, y: transform.y }) : undefined,
+        transform: transform ? CSS.Transform.toString(transform) : undefined,
         transition,
         opacity: isDragging ? 0.5 : 1,
         willChange: 'transform',
@@ -210,14 +218,26 @@ export const StructuralElementCard = forwardRef<StructuralElementCardRef, Struct
                     <CardContent className="card-padding struct-card-content dark:bg-neutral-900">
                         <Collapsible open={isTextExpanded} onOpenChange={(open) => onCollapsedChange({ ...collapsed, text: !open })}>
                             <CollapsibleContent className="collapsible-content">
-                                <EnhancedTextarea
-                                    ref={textareaRef}
-                                    value={element.content}
-                                    onChange={(e) => onUpdate(element.id, { content: e.target.value })}
-                                    placeholder="Enter your prompt content here..."
-                                    className="min-h-[80px] font-mono text-sm resize-y dark:bg-neutral-900"
-                                    elementId={element.id}
-                                />
+                                <div className="relative group">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onToggleStarTextBox(element.id)}
+                                        className={`absolute top-2 right-2 w-4 h-4 p-0 z-10 transition-opacity duration-200 ${Array.isArray(starredTextBoxes) && starredTextBoxes.includes(element.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                            }`}
+                                        title={Array.isArray(starredTextBoxes) && starredTextBoxes.includes(element.id) ? 'Remove from starred' : 'Add to starred'}
+                                    >
+                                        <Star className={`w-4 h-4 ${Array.isArray(starredTextBoxes) && starredTextBoxes.includes(element.id) ? 'fill-current text-yellow-500' : 'text-muted-foreground hover:text-yellow-400'}`} />
+                                    </Button>
+                                    <EnhancedTextarea
+                                        ref={textareaRef}
+                                        value={element.content}
+                                        onChange={(e) => onUpdate(element.id, { content: e.target.value })}
+                                        placeholder="Enter your prompt content here..."
+                                        className="min-h-[80px] font-mono text-sm resize-y dark:bg-neutral-900"
+                                        elementId={element.id}
+                                    />
+                                </div>
                             </CollapsibleContent>
                         </Collapsible>
 
@@ -230,6 +250,9 @@ export const StructuralElementCard = forwardRef<StructuralElementCardRef, Struct
                                     content={element.content}
                                     controlValues={controlValues}
                                     onControlChange={onControlChange}
+                                    elementId={element.id}
+                                    starredControls={starredControls}
+                                    onToggleStarControl={onToggleStarControl}
                                 />
                             </CollapsibleContent>
                         </Collapsible>

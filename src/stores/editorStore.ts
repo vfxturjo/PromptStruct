@@ -50,6 +50,11 @@ interface EditorState {
     uiGlobalControlValues: Record<string, any>;
     uiTextEditorHeight: Record<string, number>; // elementId -> height in pixels
     uiShowFavourites: boolean;
+    uiMiniEditorCollapsed: Record<string, boolean>; // elementId -> collapsed state
+
+    // Star system state
+    starredControls: Record<string, string[]>; // elementId -> array of control names
+    starredTextBoxes: string[]; // array of elementIds
 
     // Browser window panel visibility
     browserPanels: BrowserPanelsState;
@@ -77,6 +82,11 @@ interface EditorState {
     setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }>) => void;
     setUiTextEditorHeight: (elementId: string, height: number) => void;
     setUiShowFavourites: (show: boolean) => void;
+    setUiMiniEditorCollapsed: (elementId: string, collapsed: boolean) => void;
+
+    // Star system actions
+    toggleStarControl: (elementId: string, controlName: string) => void;
+    toggleStarTextBox: (elementId: string) => void;
 
     // Browser panels actions
     setBrowserPanels: (panels: Partial<BrowserPanelsState>) => void;
@@ -156,6 +166,9 @@ export const useEditorStore = create<EditorState>()(
             uiGlobalControlValues: {},
             uiTextEditorHeight: {},
             uiShowFavourites: true,
+            uiMiniEditorCollapsed: {},
+            starredControls: {},
+            starredTextBoxes: [],
             browserPanels: {
                 showSearchBar: true,
                 showProjects: true,
@@ -233,6 +246,39 @@ export const useEditorStore = create<EditorState>()(
                     uiTextEditorHeight: { ...state.uiTextEditorHeight, [elementId]: height },
                 })),
             setUiShowFavourites: (show) => set({ uiShowFavourites: show }),
+            setUiMiniEditorCollapsed: (elementId, collapsed) =>
+                set((state) => ({
+                    uiMiniEditorCollapsed: { ...state.uiMiniEditorCollapsed, [elementId]: collapsed },
+                })),
+            toggleStarControl: (elementId, controlName) =>
+                set((state) => {
+                    const currentStarred = Array.isArray(state.starredControls[elementId]) ? state.starredControls[elementId] : [];
+                    const newStarred = [...currentStarred];
+                    const index = newStarred.indexOf(controlName);
+                    if (index > -1) {
+                        newStarred.splice(index, 1);
+                    } else {
+                        newStarred.push(controlName);
+                    }
+                    return {
+                        starredControls: {
+                            ...state.starredControls,
+                            [elementId]: newStarred,
+                        },
+                    };
+                }),
+            toggleStarTextBox: (elementId) =>
+                set((state) => {
+                    const currentStarredTextBoxes = Array.isArray(state.starredTextBoxes) ? state.starredTextBoxes : [];
+                    const newStarredTextBoxes = [...currentStarredTextBoxes];
+                    const index = newStarredTextBoxes.indexOf(elementId);
+                    if (index > -1) {
+                        newStarredTextBoxes.splice(index, 1);
+                    } else {
+                        newStarredTextBoxes.push(elementId);
+                    }
+                    return { starredTextBoxes: newStarredTextBoxes };
+                }),
             setBrowserPanels: (panels) => set((state) => ({ browserPanels: { ...state.browserPanels, ...panels } })),
             setEditorPanels: (panels) => set((state) => ({ editorPanels: { ...state.editorPanels, ...panels } })),
             setMiniEditorContext: (ctx) => set((state) => ({ miniEditor: { ...state.miniEditor, lastOpenedContext: ctx } })),
@@ -401,6 +447,9 @@ export const useEditorStore = create<EditorState>()(
                 uiGlobalControlValues: state.uiGlobalControlValues,
                 uiTextEditorHeight: state.uiTextEditorHeight,
                 uiShowFavourites: state.uiShowFavourites,
+                uiMiniEditorCollapsed: state.uiMiniEditorCollapsed,
+                starredControls: state.starredControls,
+                starredTextBoxes: state.starredTextBoxes,
                 browserPanels: state.browserPanels,
                 editorPanels: state.editorPanels,
                 miniEditor: state.miniEditor,
