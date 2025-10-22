@@ -8,13 +8,12 @@ import { renderPrompt, parseControlSyntax } from '@/utils/syntaxParser';
 import { useNavigate } from 'react-router-dom';
 import { NotificationService } from '@/services/notificationService';
 import { useKeyboardShortcuts, CommonShortcuts } from '@/services/keyboardShortcuts';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Kbd } from '@/components/ui/kbd';
 import { Save, Download, Copy, HelpCircle, ChevronRight, Plus, Eye, EyeOff } from 'lucide-react';
 import { TopBar } from './TopBar';
 import { ExportOptionsModal } from './ExportOptionsModal';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 export function MainLayout() {
     const {
@@ -31,13 +30,11 @@ export function MainLayout() {
         saveCurrentPrompt,
         cleanupOldAutoSaves,
         uiCollapsedByElementId,
-        uiHelpPanelExpanded,
-        uiPreviewPanelExpanded,
         uiGlobalControlValues,
         setUiCollapsedForElement,
-        setUiHelpPanelExpanded,
-        setUiPreviewPanelExpanded,
         setUiGlobalControlValues,
+        editorPanels,
+        setEditorPanels,
         versions
     } = useEditorStore();
 
@@ -46,6 +43,7 @@ export function MainLayout() {
 
     // Refs for structural element cards
     const elementCardRefs = useRef<Record<string, StructuralElementCardRef>>({});
+    const panelGroupRef = useRef<any>(null);
 
     const navigate = useNavigate();
 
@@ -200,126 +198,33 @@ export function MainLayout() {
         setUiGlobalControlValues({ ...uiGlobalControlValues, [name]: value });
     };
 
-    const handlePreviewDoubleClick = (elementId: string, event: React.MouseEvent) => {
-        console.log('Double-click detected for element:', elementId);
-
-        // Find the element
+    const handlePreviewDoubleClick = (elementId: string) => {
         const element = structure.find(el => el.id === elementId);
-        if (!element) {
-            console.log('Element not found:', elementId);
-            return;
-        }
+        if (!element) return;
 
-        // Check current collapsed state
         const currentCollapsed = uiCollapsedByElementId[elementId] || { text: true, controls: true };
         const isTextCollapsed = currentCollapsed.text;
-        const isControlsCollapsed = currentCollapsed.controls;
 
-        console.log('Current collapsed state:', { text: isTextCollapsed, controls: isControlsCollapsed });
-
-        // Expand the element if text area is collapsed
         if (isTextCollapsed) {
-            console.log('Expanding collapsed element');
             setUiCollapsedForElement(elementId, {
                 text: false,
-                controls: isControlsCollapsed, // Keep controls state as is
-                lastExpandedState: { text: true, controls: isControlsCollapsed }
+                controls: currentCollapsed.controls,
+                lastExpandedState: { text: true, controls: currentCollapsed.controls }
             });
         }
 
-        // Calculate cursor position accounting for dynamic controls
-        const calculateCursorPosition = (clickEvent: React.MouseEvent): number => {
-            const target = clickEvent.target as HTMLElement;
-            const elementSpan = target.closest('[data-element-id]') as HTMLElement;
-
-            if (!elementSpan) {
-                console.log('No element span found');
-                return 0;
-            }
-
-            // Get the rendered text content (with dynamic controls resolved)
-            const renderedText = elementSpan.textContent || '';
-            const spanRect = elementSpan.getBoundingClientRect();
-
-            // Calculate relative position
-            const relativeX = clickEvent.clientX - spanRect.left;
-            const relativeY = clickEvent.clientY - spanRect.top;
-
-            console.log('Click position:', { relativeX, relativeY, renderedText: renderedText.substring(0, 50) });
-
-            // Get the original element content (with raw control syntax)
-            const originalElement = structure.find(el => el.id === elementId);
-            if (!originalElement) {
-                console.log('Original element not found');
-                return 0;
-            }
-
-            const originalText = originalElement.content;
-            console.log('Original text:', originalText.substring(0, 50));
-
-            // Simple approach: estimate based on character width
-            const avgCharWidth = 8; // Approximate character width
-            const lineHeight = 16; // Approximate line height
-
-            // Find which line was clicked in the rendered text
-            const clickedLineIndex = Math.floor(relativeY / lineHeight);
-            const renderedLines = renderedText.split('\n');
-            const clickedRenderedLine = renderedLines[Math.min(clickedLineIndex, renderedLines.length - 1)] || '';
-
-            // Find character position within the rendered line
-            const charPosition = Math.floor(relativeX / avgCharWidth);
-            const clampedCharPosition = Math.min(charPosition, clickedRenderedLine.length);
-
-            // Calculate total position in rendered text
-            let renderedPosition = clampedCharPosition;
-            for (let i = 0; i < clickedLineIndex; i++) {
-                renderedPosition += renderedLines[i].length + 1; // +1 for newline
-            }
-
-            console.log('Rendered position:', renderedPosition, 'for rendered line:', clickedRenderedLine.substring(0, 20));
-
-            // Now we need to map this rendered position back to the original text position
-            // This is complex because dynamic controls can change text length
-            // For now, use a simple percentage-based mapping
-            const renderedLength = renderedText.length;
-            const originalLength = originalText.length;
-
-            if (renderedLength > 0) {
-                const percentage = renderedPosition / renderedLength;
-                const mappedPosition = Math.floor(originalLength * percentage);
-                const finalPosition = Math.min(mappedPosition, originalLength);
-
-                console.log('Mapped position:', finalPosition, 'from percentage:', percentage);
-                return finalPosition;
-            }
-
-            return 0;
-        };
-
-        // Scroll the element into view first
         const elementCard = document.querySelector(`[data-element-card-id="${elementId}"]`) as HTMLElement;
         if (elementCard) {
-            elementCard.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-            });
+            elementCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
         }
 
-        // Calculate cursor position
-        const cursorPosition = calculateCursorPosition(event);
-
-        // Focus the textarea and set cursor position using refs
         const elementCardRef = elementCardRefs.current[elementId];
         if (elementCardRef) {
-            // Use a delay to ensure the element is expanded and rendered
             const delay = isTextCollapsed ? 300 : 100;
             setTimeout(() => {
                 elementCardRef.focusTextarea();
-                elementCardRef.setTextareaSelectionRange(cursorPosition, cursorPosition);
+                elementCardRef.setTextareaSelectionRange(0, 0);
             }, delay);
-        } else {
-            console.log('Element card ref not found for:', elementId);
         }
     };
 
@@ -390,16 +295,16 @@ export function MainLayout() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setUiPreviewPanelExpanded(!uiPreviewPanelExpanded)}
-                            title={uiPreviewPanelExpanded ? "Hide Preview Panel" : "Show Preview Panel"}
+                            onClick={() => setEditorPanels({ showStructure: !editorPanels.showStructure })}
+                            title={editorPanels.showStructure ? "Hide Structure Panel" : "Show Structure Panel"}
                         >
-                            {uiPreviewPanelExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {editorPanels.showStructure ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setUiHelpPanelExpanded(!uiHelpPanelExpanded)}
-                            title={uiHelpPanelExpanded ? "Hide Help Panel" : "Show Help Panel"}
+                            onClick={() => setEditorPanels({ showHelp: !editorPanels.showHelp })}
+                            title={editorPanels.showHelp ? "Hide Help Panel" : "Show Help Panel"}
                         >
                             <HelpCircle className="w-4 h-4" />
                         </Button>
@@ -425,17 +330,20 @@ export function MainLayout() {
 
             {/* Main Content */}
             <div className="flex-1 overflow-hidden">
-                <PanelGroup direction="horizontal" className="h-full">
+                <ResizablePanelGroup ref={panelGroupRef} direction="horizontal" autoSaveId="editor-layout" onLayout={(sizes) => {
+                    if (sizes[0] < 8 && editorPanels.showStructure) setEditorPanels({ showStructure: false });
+                    if (sizes[2] < 8 && editorPanels.showHelp) setEditorPanels({ showHelp: false });
+                }}>
                     {/* Structure Panel */}
-                    <Panel defaultSize={30}>
+                    <ResizablePanel defaultSize={30} minSize={8} collapsible onCollapse={() => setEditorPanels({ showStructure: false })} onExpand={() => setEditorPanels({ showStructure: true })}>
                         <div className="h-full border-r panel-padding flex flex-col">
-                            <Card className="h-full flex flex-col dark:bg-neutral-900">
-                                <CardHeader className="flex-shrink-0">
-                                    <h3 className="text-lg font-bold title-spacing">
-                                        Structure
-                                    </h3>
-                                </CardHeader>
-                                <CardContent className="flex-1 overflow-y-auto">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold">
+                                    Structure
+                                </h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                <div className="space-y-2">
                                     <DndContext
                                         sensors={sensors}
                                         collisionDetection={closestCenter}
@@ -471,185 +379,174 @@ export function MainLayout() {
                                             </div>
                                         </SortableContext>
                                     </DndContext>
-                                </CardContent>
-                                <CardFooter className="flex-shrink-0">
-                                    <Button
-                                        onClick={handleAddElement}
-                                        className="w-full"
-                                    >
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Add Element
-                                    </Button>
-                                </CardFooter>
-                            </Card>
+                                </div>
+                            </div>
+                            <div className="flex-shrink-0 mt-4">
+                                <Button
+                                    onClick={handleAddElement}
+                                    className="w-full"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Add Element
+                                </Button>
+                            </div>
                         </div>
-                    </Panel>
+                    </ResizablePanel>
+                    <ResizableHandle withHandle />
 
                     {/* Preview Panel */}
-                    {uiPreviewPanelExpanded && (
-                        <>
-                            <PanelResizeHandle className="w-2 bg-border" />
-                            <Panel defaultSize={uiHelpPanelExpanded ? 50 : 70}>
-                                <div className="h-full panel-padding flex flex-col">
-                                    <Card className="h-full flex flex-col dark:bg-neutral-900">
-                                        <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
-                                            <h3 className="text-lg font-bold title-spacing">
-                                                Preview
-                                            </h3>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    onClick={() => setPreviewMode('clean')}
-                                                    variant={previewMode === 'clean' ? 'default' : 'outline'}
-                                                >
-                                                    Clean
-                                                </Button>
-                                                <Button
-                                                    onClick={() => setPreviewMode('raw')}
-                                                    variant={previewMode === 'raw' ? 'default' : 'outline'}
-                                                >
-                                                    Raw
-                                                </Button>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="flex-1 overflow-y-auto">
-                                            <div
-                                                className="whitespace-pre-wrap font-mono text-sm"
-                                                onMouseMove={(e) => {
-                                                    const target = e.target as HTMLElement;
-                                                    const elementSpan = target.closest('[data-element-id]') as HTMLElement;
-                                                    if (elementSpan) {
-                                                        const elementId = elementSpan.getAttribute('data-element-id');
-                                                        setHighlightedElementId(elementId);
-                                                    }
-                                                }}
-                                                onMouseLeave={() => setHighlightedElementId(null)}
-                                                onDoubleClick={(e) => {
-                                                    const target = e.target as HTMLElement;
-                                                    const elementSpan = target.closest('[data-element-id]') as HTMLElement;
-                                                    if (elementSpan) {
-                                                        const elementId = elementSpan.getAttribute('data-element-id');
-                                                        if (elementId) {
-                                                            handlePreviewDoubleClick(elementId, e);
-                                                        }
-                                                    }
-                                                }}
-                                            >
-                                                {structure.length === 0 ? (
-                                                    <div className="text-center py-8">
-                                                        <div className="text-4xl mb-4">✨</div>
-                                                        <p>Your rendered prompt will appear here...</p>
-                                                        <small className="text-muted-foreground">Add some elements to get started</small>
-                                                    </div>
-                                                ) : (
-                                                    <div dangerouslySetInnerHTML={{ __html: renderPreview() }} />
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter className="flex-shrink-0">
-                                            <Button
-                                                onClick={handleCopyPrompt}
-                                                disabled={structure.length === 0}
-                                                className="w-full"
-                                            >
-                                                <Copy className="w-4 h-4 mr-2" />
-                                                Copy Prompt
-                                            </Button>
-                                        </CardFooter>
-                                    </Card>
+                    <ResizablePanel defaultSize={editorPanels.showHelp ? 50 : 70} minSize={20}>
+                        <div className="h-full panel-padding flex flex-col">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold">
+                                    Preview
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        onClick={() => setPreviewMode('clean')}
+                                        variant={previewMode === 'clean' ? 'default' : 'outline'}
+                                    >
+                                        Clean
+                                    </Button>
+                                    <Button
+                                        onClick={() => setPreviewMode('raw')}
+                                        variant={previewMode === 'raw' ? 'default' : 'outline'}
+                                    >
+                                        Raw
+                                    </Button>
                                 </div>
-                            </Panel>
-                        </>
-                    )}
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                <div className="space-y-2">
+                                    <div
+                                        className="whitespace-pre-wrap font-mono text-sm p-3 bg-muted/50 rounded-md min-h-[400px]"
+                                        onMouseMove={(e) => {
+                                            const target = e.target as HTMLElement;
+                                            const elementSpan = target.closest('[data-element-id]') as HTMLElement;
+                                            if (elementSpan) {
+                                                const elementId = elementSpan.getAttribute('data-element-id');
+                                                setHighlightedElementId(elementId);
+                                            }
+                                        }}
+                                        onMouseLeave={() => setHighlightedElementId(null)}
+                                        onDoubleClick={(e) => {
+                                            const target = e.target as HTMLElement;
+                                            const elementSpan = target.closest('[data-element-id]') as HTMLElement;
+                                            if (elementSpan) {
+                                                const elementId = elementSpan.getAttribute('data-element-id');
+                                                if (elementId) {
+                                                    handlePreviewDoubleClick(elementId);
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        {structure.length === 0 ? (
+                                            <div className="text-center py-8">
+                                                <div className="text-4xl mb-4">✨</div>
+                                                <p>Your rendered prompt will appear here...</p>
+                                                <small className="text-muted-foreground">Add some elements to get started</small>
+                                            </div>
+                                        ) : (
+                                            <div dangerouslySetInnerHTML={{ __html: renderPreview() }} />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-shrink-0 mt-4">
+                                <Button
+                                    onClick={handleCopyPrompt}
+                                    disabled={structure.length === 0}
+                                    className="w-full"
+                                >
+                                    <Copy className="w-4 h-4 mr-2" />
+                                    Copy Prompt
+                                </Button>
+                            </div>
+                        </div>
+                    </ResizablePanel>
+                    <ResizableHandle withHandle />
 
                     {/* Help Panel */}
-                    {uiHelpPanelExpanded && (
-                        <>
-                            <PanelResizeHandle className="w-2 bg-border" />
-                            <Panel defaultSize={20}>
-                                <div className="h-full border-l panel-padding flex flex-col">
-                                    <Card className="h-full flex flex-col dark:bg-neutral-900">
-                                        <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
-                                            <h3 className="text-lg font-bold title-spacing">
-                                                Help
-                                            </h3>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setUiHelpPanelExpanded(false)}
-                                            >
-                                                <ChevronRight className="w-4 h-4" />
-                                            </Button>
-                                        </CardHeader>
-                                        <CardContent className="flex-1 overflow-y-auto stack-section">
-                                            <div>
-                                                <h4 className="text-sm font-medium mb-2">📝 Edit Elements</h4>
-                                                <p className="text-sm text-muted-foreground">
-                                                    Click on any element in the left panel to edit its content.
-                                                </p>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium mb-2">🎛️ Control Syntax</h4>
-                                                <div className="space-y-3">
-                                                    <div className="flex flex-col gap-1">
-                                                        <Kbd className="w-fit whitespace-nowrap">{'{{text:Name:Default}}'}</Kbd>
-                                                        <span className="text-sm text-muted-foreground">→ Text input</span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <Kbd className="w-fit whitespace-nowrap">{'{{select:Name:Option1|Option2}}'}</Kbd>
-                                                        <span className="text-sm text-muted-foreground">→ Dropdown</span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <Kbd className="w-fit whitespace-nowrap">{'{{slider:Name:50}}'}</Kbd>
-                                                        <span className="text-sm text-muted-foreground">→ Slider</span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <Kbd className="w-fit whitespace-nowrap break-all">{'{{toggle:Name}}...{{/toggle:Name}}'}</Kbd>
-                                                        <span className="text-sm text-muted-foreground">→ Toggle block</span>
-                                                    </div>
-                                                </div>
-                                                <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
-                                                    💡 Tip: Type <Kbd className="whitespace-nowrap">Ctrl+{'{'}</Kbd> to quickly start a control placeholder
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium mb-2">⌨️ Shortcuts</h4>
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <Kbd>Ctrl+N</Kbd>
-                                                        <span className="text-sm">Add element</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Kbd>Ctrl+S</Kbd>
-                                                        <span className="text-sm">Save</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Kbd>Ctrl+C</Kbd>
-                                                        <span className="text-sm">Copy prompt</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Kbd>Escape</Kbd>
-                                                        <span className="text-sm">Back to browser</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium mb-2">🔄 Preview Modes</h4>
-                                                <div className="space-y-1">
-                                                    <div><strong>Clean:</strong> Final prompt with values</div>
-                                                    <div><strong>Raw:</strong> Prompt with {'{{...}}'} syntax</div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                    <ResizablePanel defaultSize={20} minSize={8} collapsible onCollapse={() => setEditorPanels({ showHelp: false })} onExpand={() => setEditorPanels({ showHelp: true })}>
+                        <div className="h-full border-l panel-padding overflow-y-auto">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold">
+                                    Help
+                                </h3>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEditorPanels({ showHelp: false })}
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="text-sm font-medium mb-2">📝 Edit Elements</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Click on any element in the left panel to edit its content.
+                                    </p>
                                 </div>
-                            </Panel>
-                        </>
-                    )}
-                </PanelGroup>
 
+                                <div>
+                                    <h4 className="text-sm font-medium mb-2">🎛️ Control Syntax</h4>
+                                    <div className="space-y-3">
+                                        <div className="flex flex-col gap-1">
+                                            <Kbd className="w-fit whitespace-nowrap">{'{{text:Name:Default}}'}</Kbd>
+                                            <span className="text-sm text-muted-foreground">→ Text input</span>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Kbd className="w-fit whitespace-nowrap">{'{{select:Name:Option1|Option2}}'}</Kbd>
+                                            <span className="text-sm text-muted-foreground">→ Dropdown</span>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Kbd className="w-fit whitespace-nowrap">{'{{slider:Name:50}}'}</Kbd>
+                                            <span className="text-sm text-muted-foreground">→ Slider</span>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Kbd className="w-fit whitespace-nowrap break-all">{'{{toggle:Name}}...{{/toggle:Name}}'}</Kbd>
+                                            <span className="text-sm text-muted-foreground">→ Toggle block</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
+                                        💡 Tip: Type <Kbd className="whitespace-nowrap">Ctrl+{'{'}</Kbd> to quickly start a control placeholder
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-sm font-medium mb-2">⌨️ Shortcuts</h4>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <Kbd>Ctrl+N</Kbd>
+                                            <span className="text-sm">Add element</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Kbd>Ctrl+S</Kbd>
+                                            <span className="text-sm">Save</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Kbd>Ctrl+C</Kbd>
+                                            <span className="text-sm">Copy prompt</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Kbd>Escape</Kbd>
+                                            <span className="text-sm">Back to browser</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-sm font-medium mb-2">🔄 Preview Modes</h4>
+                                    <div className="space-y-1">
+                                        <div><strong>Clean:</strong> Final prompt with values</div>
+                                        <div><strong>Raw:</strong> Prompt with {'{{...}}'} syntax</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ResizablePanel>
+                </ResizablePanelGroup>
             </div>
 
             {/* Export Options Modal */}

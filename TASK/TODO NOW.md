@@ -1,7 +1,8 @@
-1. Google account login. user's full project will be synced to google account. It will be stored inside google account.
-2. "Double click in the preview window to go to the text editor in structure editor" feature currently tries to place the cursor to the specific corresponding position. The implementation is broken and unstable. remove the logic to place the cursor to specific position. Just placing it to the start is enough.
-3. in browser window, implement the panel-like system like the prompt editor window too. There will be 3 panels:
-   - Projects panel: currently implemented. make it a panel.
-   - Prompts panel: Shows prompts in currently selected project. currently implemented. make it a panel
-   - Preview panel: not yet created. it will let user use the prompt directly. it will have a mini structure editor, which will load the state of latest open things which was in the editor of the prompt, and a preview window. The preview will only show the clean output, so no need to add the raw button. you can use existing implementation of the preview component- somehow keep track of if it is the mini editor or the main editor, and show things accordingly.
-   - buttons to show/hide panels: please place the buttons to show/hide the panels in the top bar. one will be able to hide the search bar, Projects panel, and/or the direct use preview. Use icons to show/hide them. dont add text. add tooltip on when hovering.
+1. Star system implementation
+We have to implement a star stystem in the structure editor. If an element is starrred, it will be shown in mini structured editor in the browser window.
+
+Things that can be starred: individual dynamic controls (show a star button at the right side of each dynamic controls when hovering. if not hovering, dont show. If user clicks the star button, it lights up, and stays visible even if not hovering), or the text box (show a floating star button at the top right of each text box. if not hovering, dont show. If user clicks the star button, it lights up, and stays visible even if not hovering).
+
+2. mini structure editor implementation:
+Currently, the Direct Use Preview panel only shows the output prompt. It should show mini structure editor and the output prompt. mini structure editor will show only the starred elements, and let user edit them.
+it will be a bit liting, for simplicity: user will not be able to rearragne the elements. the heading bar will be smaller, clicking will show/hide the starred thing (dynamic controls/text box, whichever starred) and there will be only on/off button. only the dynamic controls starred will be shown (toggle, slider, etc)

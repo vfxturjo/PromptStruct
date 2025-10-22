@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '@/stores/editorStore';
 import { NotificationService } from '@/services/notificationService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -7,8 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Settings, Save, Trash2, Download, Upload, Palette } from 'lucide-react';
+import { Settings, Save, Trash2, Download, Upload, Palette, LogIn, LogOut, RefreshCw, HardDrive } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
+import { signIn, signOut } from '@/services/googleAuth';
+import { getQuota, deleteAllAppData } from '@/services/driveService';
+import { syncNow } from '@/services/syncService';
 
 interface GlobalSettingsProps {
     isOpen: boolean;
@@ -34,6 +37,14 @@ export function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps) {
     const { theme, setTheme } = useTheme();
     const [autoSaveInterval, setAutoSaveInterval] = useState(30);
     const [defaultExportFormat, setDefaultExportFormat] = useState<'json' | 'markdown' | 'txt'>('json');
+    const { sync, setSyncState } = useEditorStore();
+
+    useEffect(() => {
+        // Attempt to refresh quota on open if signed in
+        if (isOpen && sync.isSignedIn) {
+            getQuota().then((q) => setSyncState({ quota: q.storageQuota })).catch(() => { });
+        }
+    }, [isOpen]);
 
     const handleSave = () => {
         try {
@@ -64,6 +75,47 @@ export function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps) {
             } catch (error) {
                 NotificationService.error(`Failed to clear data: ${error}`);
             }
+        }
+    };
+
+    const handleSignIn = async () => {
+        try {
+            await signIn();
+            setSyncState({ isSignedIn: true, status: 'idle' });
+            const q = await getQuota();
+            setSyncState({ quota: q.storageQuota });
+            NotificationService.success('Signed in to Google');
+        } catch (e) {
+            NotificationService.error(`Sign-in failed: ${e}`);
+        }
+    };
+
+    const handleSignOut = () => {
+        try {
+            signOut();
+            setSyncState({ isSignedIn: false, quota: null });
+            NotificationService.success('Signed out');
+        } catch (e) {
+            NotificationService.error(`Sign-out failed: ${e}`);
+        }
+    };
+
+    const handleDriveDeleteAll = async () => {
+        if (!window.confirm('Delete ALL synced data in Google Drive AppData? This cannot be undone.')) return;
+        try {
+            await deleteAllAppData();
+            NotificationService.success('All Google Drive AppData deleted');
+        } catch (e) {
+            NotificationService.error(`Delete failed: ${e}`);
+        }
+    };
+
+    const handleSyncNow = async () => {
+        try {
+            await syncNow();
+            NotificationService.success('Sync completed');
+        } catch (e) {
+            NotificationService.error(`Sync failed: ${e}`);
         }
     };
 
@@ -162,6 +214,71 @@ export function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps) {
                     </div>
 
                     <Separator />
+
+                    {/* Google Account */}
+                    <div className="space-y-3">
+                        <h4 className="text-lg font-semibold flex items-center gap-2">
+                            <HardDrive className="w-4 h-4" />
+                            Google Account & Sync
+                        </h4>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <Label>Authentication</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Sign in to sync your projects to Google Drive AppData
+                                </p>
+                            </div>
+                            {sync.isSignedIn ? (
+                                <Button variant="outline" onClick={handleSignOut}>
+                                    <LogOut className="w-4 h-4 mr-2" />
+                                    Sign out
+                                </Button>
+                            ) : (
+                                <Button onClick={handleSignIn}>
+                                    <LogIn className="w-4 h-4 mr-2" />
+                                    Sign in
+                                </Button>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <Label>Drive Storage Usage</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    {sync.quota ? `${sync.quota.usageInDrive ?? sync.quota.usage ?? 0} / ${sync.quota.limit ?? 0} bytes` : 'Not available'}
+                                </p>
+                            </div>
+                            <Button variant="outline" onClick={async () => {
+                                try { const q = await getQuota(); setSyncState({ quota: q.storageQuota }); } catch { }
+                            }}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Refresh
+                            </Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <Label>Sync Now</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Manually push/pull changes (last-write-wins)
+                                </p>
+                            </div>
+                            <Button onClick={handleSyncNow} disabled={!sync.isSignedIn}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Sync Now
+                            </Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <Label>Delete All Synced Data</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Permanently remove all data from AppData space
+                                </p>
+                            </div>
+                            <Button variant="destructive" onClick={handleDriveDeleteAll} disabled={!sync.isSignedIn}>
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete All (Drive)
+                            </Button>
+                        </div>
+                    </div>
 
                     {/* Projects */}
                     <div className="space-y-3">

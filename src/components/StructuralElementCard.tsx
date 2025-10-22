@@ -118,10 +118,12 @@ export const StructuralElementCard = forwardRef<StructuralElementCardRef, Struct
     } = useSortable({ id: element.id });
 
     const style = {
-        transform: CSS.Transform.toString(transform),
+        // Use translate-only to avoid scale being applied during drag which can stretch items
+        transform: transform ? CSS.Translate.toString({ x: transform.x, y: transform.y }) : undefined,
         transition,
         opacity: isDragging ? 0.5 : 1,
-    };
+        willChange: 'transform',
+    } as React.CSSProperties;
 
 
     return (

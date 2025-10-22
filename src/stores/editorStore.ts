@@ -2,6 +2,34 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { StructuralElement, Project, Prompt, Version } from '@/types';
 
+interface SyncState {
+    isSignedIn: boolean;
+    user: { id?: string; email?: string; name?: string } | null;
+    quota?: { limit?: number; usage?: number; usageInDrive?: number } | null;
+    status: 'idle' | 'syncing' | 'error' | 'success';
+    lastSyncedAt?: string;
+    errors?: string[];
+    lastKnownRevisionMap: Record<string, string | undefined>; // fileName -> revisionId
+    pendingPush: boolean;
+}
+
+interface BrowserPanelsState {
+    showSearchBar: boolean;
+    showProjects: boolean;
+    showDirectUsePreview: boolean;
+}
+
+interface EditorPanelsState {
+    showStructure: boolean;
+    showPreview: boolean;
+    showHelp: boolean;
+}
+
+interface MiniEditorState {
+    lastOpenedContext?: { projectId?: string; promptId?: string } | null;
+    state?: any;
+}
+
 interface EditorState {
     // Current working state
     structure: StructuralElement[];
@@ -23,6 +51,15 @@ interface EditorState {
     uiTextEditorHeight: Record<string, number>; // elementId -> height in pixels
     uiShowFavourites: boolean;
 
+    // Browser window panel visibility
+    browserPanels: BrowserPanelsState;
+
+    // Editor window panel visibility
+    editorPanels: EditorPanelsState;
+
+    // Mini editor session state
+    miniEditor: MiniEditorState;
+
     // Actions
     setPreviewMode: (mode: 'clean' | 'raw') => void;
     updateStructuralElement: (id: string, updates: Partial<StructuralElement>) => void;
@@ -40,6 +77,20 @@ interface EditorState {
     setUiCollapsedByElementId: (collapsed: Record<string, { text: boolean; controls: boolean; lastExpandedState?: { text: boolean; controls: boolean } }>) => void;
     setUiTextEditorHeight: (elementId: string, height: number) => void;
     setUiShowFavourites: (show: boolean) => void;
+
+    // Browser panels actions
+    setBrowserPanels: (panels: Partial<BrowserPanelsState>) => void;
+
+    // Editor panels actions
+    setEditorPanels: (panels: Partial<EditorPanelsState>) => void;
+
+    // Mini editor actions
+    setMiniEditorContext: (ctx: MiniEditorState['lastOpenedContext']) => void;
+    setMiniEditorState: (state: any) => void;
+
+    // Sync state
+    sync: SyncState;
+    setSyncState: (partial: Partial<SyncState>) => void;
 
     // Project management
     addProject: (project: Project) => void;
@@ -105,6 +156,30 @@ export const useEditorStore = create<EditorState>()(
             uiGlobalControlValues: {},
             uiTextEditorHeight: {},
             uiShowFavourites: true,
+            browserPanels: {
+                showSearchBar: true,
+                showProjects: true,
+                showDirectUsePreview: true,
+            },
+            editorPanels: {
+                showStructure: true,
+                showPreview: true,
+                showHelp: true,
+            },
+            miniEditor: {
+                lastOpenedContext: null,
+                state: undefined,
+            },
+            sync: {
+                isSignedIn: false,
+                user: null,
+                quota: null,
+                status: 'idle',
+                lastSyncedAt: undefined,
+                errors: [],
+                lastKnownRevisionMap: {},
+                pendingPush: false,
+            },
 
             // Preview mode
             setPreviewMode: (mode) => set({ previewMode: mode }),
@@ -158,6 +233,11 @@ export const useEditorStore = create<EditorState>()(
                     uiTextEditorHeight: { ...state.uiTextEditorHeight, [elementId]: height },
                 })),
             setUiShowFavourites: (show) => set({ uiShowFavourites: show }),
+            setBrowserPanels: (panels) => set((state) => ({ browserPanels: { ...state.browserPanels, ...panels } })),
+            setEditorPanels: (panels) => set((state) => ({ editorPanels: { ...state.editorPanels, ...panels } })),
+            setMiniEditorContext: (ctx) => set((state) => ({ miniEditor: { ...state.miniEditor, lastOpenedContext: ctx } })),
+            setMiniEditorState: (s) => set((state) => ({ miniEditor: { ...state.miniEditor, state: s } })),
+            setSyncState: (partial) => set((state) => ({ sync: { ...state.sync, ...partial } })),
 
             // Project management
             addProject: (project) =>
@@ -321,6 +401,10 @@ export const useEditorStore = create<EditorState>()(
                 uiGlobalControlValues: state.uiGlobalControlValues,
                 uiTextEditorHeight: state.uiTextEditorHeight,
                 uiShowFavourites: state.uiShowFavourites,
+                browserPanels: state.browserPanels,
+                editorPanels: state.editorPanels,
+                miniEditor: state.miniEditor,
+                sync: state.sync,
             }),
         }
     )

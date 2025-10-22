@@ -1,6 +1,6 @@
 import { useEditorStore } from '@/stores/editorStore';
 import { Project, Prompt } from '@/types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationService } from '@/services/notificationService';
 import { useKeyboardShortcuts, CommonShortcuts } from '@/services/keyboardShortcuts';
@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TopBar } from './TopBar';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { MiniPreviewPanel } from './MiniPreviewPanel';
 import { Search, Plus, Upload, FileText, Settings, Download, X, Edit, Copy, FolderOpen, Calendar, Tag, Star } from 'lucide-react';
 
 export function ProjectBrowser() {
@@ -40,10 +42,13 @@ export function ProjectBrowser() {
         setUiCollapsedByElementId,
         setUiGlobalControlValues,
         uiShowFavourites,
-        versions
+        versions,
+        browserPanels,
+        setBrowserPanels
     } = useEditorStore();
 
     const navigate = useNavigate();
+    const panelGroupRef = useRef<any>(null);
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [showNewProjectForm, setShowNewProjectForm] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
@@ -58,6 +63,8 @@ export function ProjectBrowser() {
     const [showProjectTemplates, setShowProjectTemplates] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportingProject, setExportingProject] = useState<Project | null>(null);
+    const [compactActions, setCompactActions] = useState(false);
+    const [compactProjectsActions, setCompactProjectsActions] = useState(false);
 
     // Restore selection on mount
     useEffect(() => {
@@ -624,366 +631,429 @@ export function ProjectBrowser() {
             />
 
             {/* Search Section (full width) */}
-            <div className="panel-padding border-b">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div className="md:flex-1">
-                        <EnhancedSearchBar
-                            projects={projects}
-                            prompts={prompts}
-                            onSearchResults={setSearchResults}
-                            onClearResults={clearSearchResults}
-                        />
-                    </div>
-                    <div className="flex gap-2 self-end md:self-auto md:ml-4">
-                        <Button variant="outline" onClick={() => setShowAdvancedSearch(true)}>
-                            <Search className="w-4 h-4 mr-2" />
-                            Advanced Search
-                        </Button>
-                        {searchResults && (
-                            <Button variant="outline" onClick={clearSearchResults}>
-                                Clear Results
+            {browserPanels.showSearchBar && (
+                <div className="panel-padding border-b">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div className="md:flex-1">
+                            <EnhancedSearchBar
+                                projects={projects}
+                                prompts={prompts}
+                                onSearchResults={setSearchResults}
+                                onClearResults={clearSearchResults}
+                            />
+                        </div>
+                        <div className="flex gap-2 self-end md:self-auto md:ml-4">
+                            <Button variant="outline" onClick={() => setShowAdvancedSearch(true)}>
+                                <Search className="w-4 h-4 mr-2" />
+                                Advanced Search
                             </Button>
-                        )}
+                            {searchResults && (
+                                <Button variant="outline" onClick={clearSearchResults}>
+                                    Clear Results
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Content */}
-            <div className="flex-1 flex overflow-hidden">
-                {/* Projects List */}
-                <div className="w-1/2 border-r panel-padding overflow-y-auto">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold">
-                            {searchResults ? 'Search Results' : 'Projects'}
-                        </h3>
-                        {!searchResults && (
-                            <Button onClick={() => setShowNewProjectForm(true)}>
-                                <Plus className="w-4 h-4 mr-2" />
-                                New Project
-                            </Button>
-                        )}
-                    </div>
-                    <div className="space-y-2">
-                        {/* Show Projects */}
-                        {projectsWithFavourites.map((project) => (
-                            <Card
-                                key={project.id}
-                                onClick={() => setSelectedProject(project)}
-                                className={`cursor-pointer transition-colors ${selectedProject?.id === project.id ? 'bg-accent' : ''
-                                    }`}
-                            >
-                                <CardContent className="p-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <FolderOpen className="w-4 h-4" />
-                                            <strong>{project.name}</strong>
-                                            {searchResults && (
-                                                <Badge variant="secondary" className="text-xs">
-                                                    Project
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        {project.id !== 'virtual_favourites' && (
-                                            <div className="flex gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSelectedProject(project);
-                                                        setShowProjectSettings(true);
-                                                    }}
-                                                >
-                                                    <Settings className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleExportProject(project);
-                                                    }}
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        deleteProject(project.id);
-                                                        if (selectedProject?.id === project.id) {
-                                                            setSelectedProject(null);
-                                                        }
-                                                    }}
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                                        <Calendar className="w-3 h-3" />
-                                        <span>{new Date(project.createdAt).toLocaleDateString()}</span>
-                                        {project.tags.length > 0 && (
-                                            <>
-                                                <Tag className="w-3 h-3" />
-                                                <div className="flex gap-1">
-                                                    {project.tags.slice(0, 2).map((tag) => (
-                                                        <Badge key={tag} variant="secondary" className="text-xs">
-                                                            {tag}
-                                                        </Badge>
-                                                    ))}
-                                                    {project.tags.length > 2 && (
+            <div className="flex-1 overflow-hidden">
+                <ResizablePanelGroup ref={panelGroupRef} direction="horizontal" autoSaveId="project-browser-layout" onLayout={(sizes) => {
+                    if (sizes[0] < 8 && browserPanels.showProjects) setBrowserPanels({ showProjects: false });
+                    if (sizes[2] < 8 && browserPanels.showDirectUsePreview) setBrowserPanels({ showDirectUsePreview: false });
+                }}>
+                    <ResizablePanel defaultSize={35} minSize={8} collapsible onCollapse={() => setBrowserPanels({ showProjects: false })} onExpand={() => setBrowserPanels({ showProjects: true })}>
+                        <div className="h-full border-r panel-padding overflow-y-auto" ref={(el) => {
+                            if (!el) return;
+                            const ro = new ResizeObserver((entries) => {
+                                for (const entry of entries) {
+                                    const width = entry.contentRect.width;
+                                    setCompactProjectsActions(width < 400);
+                                }
+                            });
+                            ro.observe(el);
+                        }}>
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold">
+                                    {searchResults ? 'Search Results' : 'Projects'}
+                                </h3>
+                                {!searchResults && (
+                                    <>
+                                        <Button onClick={() => setShowNewProjectForm(true)} className={compactProjectsActions ? 'hidden' : 'inline-flex'}>
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            New Project
+                                        </Button>
+                                        <Button onClick={() => setShowNewProjectForm(true)} size="icon" className={compactProjectsActions ? 'inline-flex' : 'hidden'} title="New Project">
+                                            <Plus className="w-4 h-4" />
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                {/* Show Projects */}
+                                {projectsWithFavourites.map((project) => (
+                                    <Card
+                                        key={project.id}
+                                        onClick={() => setSelectedProject(project)}
+                                        className={`cursor-pointer transition-colors ${selectedProject?.id === project.id ? 'bg-accent' : ''
+                                            }`}
+                                    >
+                                        <CardContent className="p-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <FolderOpen className="w-4 h-4" />
+                                                    <strong>{project.name}</strong>
+                                                    {searchResults && (
                                                         <Badge variant="secondary" className="text-xs">
-                                                            +{project.tags.length - 2}
+                                                            Project
                                                         </Badge>
                                                     )}
                                                 </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-
-                        {/* Show Prompts in Search Results */}
-                        {searchResults && filteredPrompts.map((prompt) => {
-                            const parentProject = projects.find(p => p.prompts.includes(prompt.id));
-                            return (
-                                <Card
-                                    key={prompt.id}
-                                    onClick={() => {
-                                        if (parentProject) {
-                                            setSelectedProject(parentProject);
-                                            setCurrentProject(parentProject);
-                                            setCurrentPrompt(prompt);
-                                            navigate('/editor');
-                                        }
-                                    }}
-                                    className="cursor-pointer transition-colors hover:bg-accent"
-                                >
-                                    <CardContent className="p-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="w-4 h-4" />
-                                                <strong>{prompt.name}</strong>
-                                                <Badge variant="outline" className="text-xs">
-                                                    Prompt
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Calendar className="w-3 h-3" />
-                                            <span>{new Date(prompt.createdAt).toLocaleDateString()}</span>
-                                            {parentProject && (
-                                                <>
-                                                    <FolderOpen className="w-3 h-3" />
-                                                    <span>in {parentProject.name}</span>
-                                                </>
-                                            )}
-                                            {prompt.tags.length > 0 && (
-                                                <>
-                                                    <Tag className="w-3 h-3" />
+                                                {project.id !== 'virtual_favourites' && (
                                                     <div className="flex gap-1">
-                                                        {prompt.tags.slice(0, 2).map((tag) => (
-                                                            <Badge key={tag} variant="secondary" className="text-xs">
-                                                                {tag}
-                                                            </Badge>
-                                                        ))}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedProject(project);
+                                                                setShowProjectSettings(true);
+                                                            }}
+                                                        >
+                                                            <Settings className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleExportProject(project);
+                                                            }}
+                                                        >
+                                                            <Download className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                deleteProject(project.id);
+                                                                if (selectedProject?.id === project.id) {
+                                                                    setSelectedProject(null);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </Button>
                                                     </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Prompts List */}
-                <div className="w-1/2 panel-padding overflow-y-auto">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold">
-                            {selectedProject ? `${selectedProject.name} - Prompts` : 'Select a Project'}
-                            {bulkMode && selectedPrompts.size > 0 && (
-                                <span className="text-xs text-muted-foreground ml-2">
-                                    ({selectedPrompts.size} selected)
-                                </span>
-                            )}
-                        </h3>
-                        <div className="flex gap-2">
-                            {bulkMode && selectedPrompts.size > 0 && (
-                                <>
-                                    <Button variant="outline" onClick={handleBulkExport}>
-                                        <Download className="w-4 h-4 mr-2" />
-                                        Export Selected
-                                    </Button>
-                                    <Button variant="destructive" onClick={handleBulkDelete}>
-                                        Delete Selected
-                                    </Button>
-                                </>
-                            )}
-                            {selectedProject && !bulkMode && (
-                                <>
-                                    {projectPrompts.length > 0 && (
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                setBulkMode(true);
-                                                setSelectedPrompts(new Set());
-                                            }}
-                                        >
-                                            Bulk Mode
-                                        </Button>
-                                    )}
-                                    <Button onClick={() => handleCreatePrompt(selectedProject.id)}>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        New Prompt
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {selectedProject ? (
-                        <div className="space-y-2">
-                            {projectPrompts.map((prompt) => (
-                                <Card
-                                    key={prompt.id}
-                                    onClick={() => {
-                                        if (bulkMode) {
-                                            handleBulkSelect(prompt.id);
-                                        } else {
-                                            setCurrentProject(selectedProject);
-                                            setCurrentPrompt(prompt);
-                                            navigate('/editor');
-                                        }
-                                    }}
-                                    className={`cursor-pointer transition-colors ${selectedPrompts.has(prompt.id) ? 'bg-accent' : ''
-                                        }`}
-                                >
-                                    <CardContent className="p-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 flex-1">
-                                                {bulkMode && (
-                                                    <Checkbox
-                                                        checked={selectedPrompts.has(prompt.id)}
-                                                        onChange={() => handleBulkSelect(prompt.id)}
-                                                    />
-                                                )}
-                                                <FileText className="w-4 h-4" />
-                                                {editingPrompt === prompt.id ? (
-                                                    <Input
-                                                        type="text"
-                                                        value={editingPromptName}
-                                                        onChange={(e) => setEditingPromptName(e.target.value)}
-                                                        onBlur={() => handleRenamePrompt(prompt.id, editingPromptName)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                handleRenamePrompt(prompt.id, editingPromptName);
-                                                            } else if (e.key === 'Escape') {
-                                                                setEditingPrompt(null);
-                                                                setEditingPromptName('');
-                                                            }
-                                                        }}
-                                                        className="h-6"
-                                                        autoFocus
-                                                    />
-                                                ) : (
-                                                    <span className="font-medium">
-                                                        {prompt.name}
-                                                    </span>
                                                 )}
                                             </div>
-                                            {!bulkMode && (
-                                                <div className="flex gap-1">
+                                            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                                <Calendar className="w-3 h-3" />
+                                                <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                                                {project.tags.length > 0 && (
+                                                    <>
+                                                        <Tag className="w-3 h-3" />
+                                                        <div className="flex gap-1">
+                                                            {project.tags.slice(0, 2).map((tag) => (
+                                                                <Badge key={tag} variant="secondary" className="text-xs">
+                                                                    {tag}
+                                                                </Badge>
+                                                            ))}
+                                                            {project.tags.length > 2 && (
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    +{project.tags.length - 2}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+
+                                {/* Show Prompts in Search Results */}
+                                {searchResults && filteredPrompts.map((prompt) => {
+                                    const parentProject = projects.find(p => p.prompts.includes(prompt.id));
+                                    return (
+                                        <Card
+                                            key={prompt.id}
+                                            onClick={() => {
+                                                if (parentProject) {
+                                                    setSelectedProject(parentProject);
+                                                    setCurrentProject(parentProject);
+                                                    setCurrentPrompt(prompt);
+                                                    navigate('/editor');
+                                                }
+                                            }}
+                                            className="cursor-pointer transition-colors hover:bg-accent"
+                                        >
+                                            <CardContent className="p-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText className="w-4 h-4" />
+                                                        <strong>{prompt.name}</strong>
+                                                        <Badge variant="outline" className="text-xs">
+                                                            Prompt
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                                    <Calendar className="w-3 h-3" />
+                                                    <span>{new Date(prompt.createdAt).toLocaleDateString()}</span>
+                                                    {parentProject && (
+                                                        <>
+                                                            <FolderOpen className="w-3 h-3" />
+                                                            <span>in {parentProject.name}</span>
+                                                        </>
+                                                    )}
+                                                    {prompt.tags.length > 0 && (
+                                                        <>
+                                                            <Tag className="w-3 h-3" />
+                                                            <div className="flex gap-1">
+                                                                {prompt.tags.slice(0, 2).map((tag) => (
+                                                                    <Badge key={tag} variant="secondary" className="text-xs">
+                                                                        {tag}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </ResizablePanel>
+                    <ResizableHandle withHandle />
+
+                    {/* Prompts List */}
+                    <ResizablePanel defaultSize={browserPanels.showDirectUsePreview ? 35 : 65} minSize={20}>
+                        <div className="h-full panel-padding overflow-y-auto" id="prompts-panel" ref={(el) => {
+                            if (!el) return;
+                            const ro = new ResizeObserver((entries) => {
+                                for (const entry of entries) {
+                                    const width = entry.contentRect.width;
+                                    setCompactActions(width < 520);
+                                }
+                            });
+                            ro.observe(el);
+                        }}>
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-semibold">
+                                    {selectedProject ? `${selectedProject.name} - Prompts` : 'Select a Project'}
+                                    {bulkMode && selectedPrompts.size > 0 && (
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                            ({selectedPrompts.size} selected)
+                                        </span>
+                                    )}
+                                </h3>
+                                <div className="flex gap-2" id="prompts-actions">
+                                    {bulkMode && selectedPrompts.size > 0 && (
+                                        <>
+                                            <Button variant="outline" onClick={handleBulkExport} className={compactActions ? 'hidden' : 'inline-flex'}>
+                                                <Download className="w-4 h-4 mr-2" />
+                                                Export Selected
+                                            </Button>
+                                            <Button variant="destructive" onClick={handleBulkDelete} className={compactActions ? 'hidden' : 'inline-flex'}>
+                                                Delete Selected
+                                            </Button>
+                                            <Button variant="outline" size="icon" onClick={handleBulkExport} className={compactActions ? 'inline-flex' : 'hidden'} title="Export Selected">
+                                                <Download className="w-4 h-4" />
+                                            </Button>
+                                            <Button variant="destructive" size="icon" onClick={handleBulkDelete} className={compactActions ? 'inline-flex' : 'hidden'} title="Delete Selected">
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        </>
+                                    )}
+                                    {selectedProject && !bulkMode && (
+                                        <>
+                                            {projectPrompts.length > 0 && (
+                                                <>
                                                     <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleToggleFavourite(prompt.id);
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            setBulkMode(true);
+                                                            setSelectedPrompts(new Set());
                                                         }}
-                                                        className={prompt.tags.includes('Favourite') ? 'text-yellow-500' : 'text-muted-foreground'}
-                                                        title={prompt.tags.includes('Favourite') ? 'Remove from favourites' : 'Add to favourites'}
+                                                        className={compactActions ? 'hidden' : 'inline-flex'}
                                                     >
-                                                        <Star className={`w-4 h-4 ${prompt.tags.includes('Favourite') ? 'fill-current' : ''}`} />
+                                                        Bulk Mode
                                                     </Button>
                                                     <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            startEditingPrompt(prompt);
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            setBulkMode(true);
+                                                            setSelectedPrompts(new Set());
                                                         }}
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDuplicatePrompt(prompt);
-                                                        }}
+                                                        className={compactActions ? 'inline-flex' : 'hidden'}
+                                                        title="Bulk Mode"
                                                     >
                                                         <Copy className="w-4 h-4" />
                                                     </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deletePrompt(prompt.id);
-
-                                                            // Update selectedProject to remove the deleted prompt
-                                                            if (selectedProject) {
-                                                                const updatedProject = {
-                                                                    ...selectedProject,
-                                                                    prompts: selectedProject.prompts.filter(id => id !== prompt.id)
-                                                                };
-                                                                setSelectedProject(updatedProject);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                                            <Calendar className="w-3 h-3" />
-                                            <span>{new Date(prompt.createdAt).toLocaleDateString()}</span>
-                                            {prompt.tags.length > 0 && (
-                                                <>
-                                                    <Tag className="w-3 h-3" />
-                                                    <div className="flex gap-1">
-                                                        {prompt.tags.slice(0, 2).map((tag) => (
-                                                            <Badge key={tag} variant="secondary" className="text-xs">
-                                                                {tag}
-                                                            </Badge>
-                                                        ))}
-                                                    </div>
                                                 </>
                                             )}
+                                            <Button onClick={() => handleCreatePrompt(selectedProject.id)} className={compactActions ? 'hidden' : 'inline-flex'}>
+                                                <Plus className="w-4 h-4 mr-2" />
+                                                New Prompt
+                                            </Button>
+                                            <Button onClick={() => handleCreatePrompt(selectedProject.id)} size="icon" className={compactActions ? 'inline-flex' : 'hidden'} title="New Prompt">
+                                                <Plus className="w-4 h-4" />
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {selectedProject ? (
+                                <div className="space-y-2">
+                                    {projectPrompts.map((prompt) => (
+                                        <Card
+                                            key={prompt.id}
+                                            onClick={() => {
+                                                if (bulkMode) {
+                                                    handleBulkSelect(prompt.id);
+                                                } else {
+                                                    setCurrentProject(selectedProject);
+                                                    setCurrentPrompt(prompt);
+                                                    navigate('/editor');
+                                                }
+                                            }}
+                                            className={`cursor-pointer transition-colors ${selectedPrompts.has(prompt.id) ? 'bg-accent' : ''
+                                                }`}
+                                        >
+                                            <CardContent className="p-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 flex-1">
+                                                        {bulkMode && (
+                                                            <Checkbox
+                                                                checked={selectedPrompts.has(prompt.id)}
+                                                                onChange={() => handleBulkSelect(prompt.id)}
+                                                            />
+                                                        )}
+                                                        <FileText className="w-4 h-4" />
+                                                        {editingPrompt === prompt.id ? (
+                                                            <Input
+                                                                type="text"
+                                                                value={editingPromptName}
+                                                                onChange={(e) => setEditingPromptName(e.target.value)}
+                                                                onBlur={() => handleRenamePrompt(prompt.id, editingPromptName)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        handleRenamePrompt(prompt.id, editingPromptName);
+                                                                    } else if (e.key === 'Escape') {
+                                                                        setEditingPrompt(null);
+                                                                        setEditingPromptName('');
+                                                                    }
+                                                                }}
+                                                                className="h-6"
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <span className="font-medium">
+                                                                {prompt.name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {!bulkMode && (
+                                                        <div className="flex gap-1">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleToggleFavourite(prompt.id);
+                                                                }}
+                                                                className={prompt.tags.includes('Favourite') ? 'text-yellow-500' : 'text-muted-foreground'}
+                                                                title={prompt.tags.includes('Favourite') ? 'Remove from favourites' : 'Add to favourites'}
+                                                            >
+                                                                <Star className={`w-4 h-4 ${prompt.tags.includes('Favourite') ? 'fill-current' : ''}`} />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    startEditingPrompt(prompt);
+                                                                }}
+                                                            >
+                                                                <Edit className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDuplicatePrompt(prompt);
+                                                                }}
+                                                            >
+                                                                <Copy className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    deletePrompt(prompt.id);
+
+                                                                    // Update selectedProject to remove the deleted prompt
+                                                                    if (selectedProject) {
+                                                                        const updatedProject = {
+                                                                            ...selectedProject,
+                                                                            prompts: selectedProject.prompts.filter(id => id !== prompt.id)
+                                                                        };
+                                                                        setSelectedProject(updatedProject);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                                    <Calendar className="w-3 h-3" />
+                                                    <span>{new Date(prompt.createdAt).toLocaleDateString()}</span>
+                                                    {prompt.tags.length > 0 && (
+                                                        <>
+                                                            <Tag className="w-3 h-3" />
+                                                            <div className="flex gap-1">
+                                                                {prompt.tags.slice(0, 2).map((tag) => (
+                                                                    <Badge key={tag} variant="secondary" className="text-xs">
+                                                                        {tag}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                    {projectPrompts.length === 0 && (
+                                        <div className="text-center text-muted-foreground py-8">
+                                            No prompts yet. Create one to get started.
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                            {projectPrompts.length === 0 && (
+                                    )}
+                                </div>
+                            ) : (
                                 <div className="text-center text-muted-foreground py-8">
-                                    No prompts yet. Create one to get started.
+                                    Select a project to view its prompts.
                                 </div>
                             )}
                         </div>
-                    ) : (
-                        <div className="text-center text-muted-foreground py-8">
-                            Select a project to view its prompts.
-                        </div>
-                    )}
-                </div>
+                    </ResizablePanel>
+
+                    <ResizableHandle withHandle />
+                    <ResizablePanel defaultSize={30} minSize={8} collapsible onCollapse={() => setBrowserPanels({ showDirectUsePreview: false })} onExpand={() => setBrowserPanels({ showDirectUsePreview: true })}>
+                        <MiniPreviewPanel />
+                    </ResizablePanel>
+                </ResizablePanelGroup>
             </div>
 
             {/* New Project Form */}

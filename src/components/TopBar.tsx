@@ -42,6 +42,7 @@ export function TopBar({ title, subtitle, showBackButton = false, onBackClick, a
                     </div>
                     <div className="flex items-center gap-2">
                         {additionalButtons}
+                        {/* Panel toggle buttons removed as requested */}
                         <Button
                             variant="outline"
                             size="sm"
