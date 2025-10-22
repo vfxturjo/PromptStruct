@@ -3,4 +3,5 @@
 3. in browser window, implement the panel-like system like the prompt editor window too. There will be 3 panels:
    - Projects panel: currently implemented. make it a panel.
    - Prompts panel: Shows prompts in currently selected project. currently implemented. make it a panel
-   - Preview panel: not yet created. it will let user use the prompt directly. it will have a mini structure editor, which will load the state of latest open things which was in the editor of the prompt, and a preview window. The preview will only show the clean output, so no need to add the raw button. you can use existing implementation of the
+   - Preview panel: not yet created. it will let user use the prompt directly. it will have a mini structure editor, which will load the state of latest open things which was in the editor of the prompt, and a preview window. The preview will only show the clean output, so no need to add the raw button. you can use existing implementation of the preview component- somehow keep track of if it is the mini editor or the main editor, and show things accordingly.
+   - buttons to show/hide panels: please place the buttons to show/hide the panels in the top bar. one will be able to hide the search bar, Projects panel, and/or the direct use preview. Use icons to show/hide them. dont add text. add tooltip on when hovering.

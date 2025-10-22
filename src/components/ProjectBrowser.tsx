@@ -604,10 +604,6 @@ export function ProjectBrowser() {
                 subtitle="Project Browser"
                 additionalButtons={(
                     <>
-                        <Button onClick={() => setShowNewProjectForm(true)}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            New Project
-                        </Button>
                         <Button variant="outline" onClick={() => document.getElementById('import-file')?.click()}>
                             <Upload className="w-4 h-4 mr-2" />
                             Import
@@ -656,9 +652,17 @@ export function ProjectBrowser() {
             <div className="flex-1 flex overflow-hidden">
                 {/* Projects List */}
                 <div className="w-1/2 border-r panel-padding overflow-y-auto">
-                    <h3 className="text-lg font-semibold mb-2">
-                        {searchResults ? 'Search Results' : 'Projects'}
-                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold">
+                            {searchResults ? 'Search Results' : 'Projects'}
+                        </h3>
+                        {!searchResults && (
+                            <Button onClick={() => setShowNewProjectForm(true)}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                New Project
+                            </Button>
+                        )}
+                    </div>
                     <div className="space-y-2">
                         {/* Show Projects */}
                         {projectsWithFavourites.map((project) => (
