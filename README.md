@@ -1,90 +1,138 @@
-# PromptStruct - Structured Prompt Builder
+## PromptStruct — Structured Prompt Authoring Studio
 
-A sophisticated, client-side web application designed to streamline the creation, management, and sharing of structured prompts for Large Language Models (LLMs). Build complex, reusable, and dynamic prompt templates with ease.
+Design, organize, and iterate on complex AI prompts with confidence. PromptStruct is a modern, offline-first prompt authoring studio that helps you build reusable prompt structures, preview outputs, manage projects, and share configurations — all with a delightful UX.
 
-## 🚀 Features Implemented
+Live site: `https://vfxturjo.github.io/PromptStruct/`
 
-### ✅ Phase 1: Core Editor Functionality
-- **Modern Tech Stack**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui
-- **Basic UI Layout**: Three-panel layout with Structure, Editor, and Preview panels
-- **CodeMirror Integration**: Custom text editor with syntax highlighting
-- **Control Syntax Parser**: Parses `{{...}}` control syntax for dynamic prompts
-- **State Management**: Zustand store for managing editor state
-- **Responsive Design**: Clean, modern UI with shadcn/ui components
+### Why PromptStruct?
+- **Structure-first**: Model complex prompts into elements, variants, and templates.
+- **Authoring UX**: Powerful editor with panels, inline tips, keyboard shortcuts, and quick search.
+- **Project-centric**: Keep prompts, templates, and settings grouped by project.
+- **Portable**: Import/export projects for easy collaboration and versioning.
+- **Offline-first PWA**: Works without network; install as an app.
 
-### 🎯 Control Types Supported
-- `{{text:Name:Default}}` - Text input controls
-- `{{toggle:Name}}...{{/toggle:Name}}` - Conditional content blocks
-- `{{slider:Name:50}}` - Numeric slider controls (0-100)
-- `{{select:Name:Option A|Option B|Option C}}` - Dropdown selectors
+### Key Features
+- **Visual prompt structuring** with draggable elements and sections
+- **Powerful search** (enhanced search bar and advanced filters)
+- **Mini structure editor** and **preview panel** for rapid iteration
+- **Project templates** and **global settings** for consistency
+- **Theming & dark mode** with a11y-conscious UI
+- **Keyboard shortcuts** for speed (common actions and navigation)
+- **Export options** to share, back up, or integrate elsewhere
+- **Optional Google Drive sync** for cloud backup
 
-### 🏗️ Architecture
-- **Frontend**: React SPA with TypeScript
-- **Styling**: Tailwind CSS with shadcn/ui components
-- **State**: Zustand for lightweight state management
-- **Editor**: CodeMirror 6 with custom syntax highlighting
-- **Build**: Vite for fast development and building
-- **Storage**: LocalStorage for client-side persistence
+### Tech Stack
+- **Frontend**: React, TypeScript, Vite
+- **UI**: Tailwind CSS, shadcn/ui (Radix primitives), Lucide icons
+- **State**: Zustand
+- **Tooling**: Vitest + Testing Library, ESLint, PostCSS
+- **PWA**: `vite-plugin-pwa`
 
-## 🛠️ Development
+---
 
-### Prerequisites
-- Node.js 18+ (or use nvm for latest version)
-- Bun package manager
+## Quick Start
 
-### Getting Started
+Prerequisites:
+- Node (latest LTS or current; use `nvm` to manage)
+- Bun runtime & package manager (`bun`)
+
+Clone and run the app locally:
+
 ```bash
-# Install dependencies
+git clone <this-repo-url>
+cd Prompter Project/Project-prompter
 bun install
-
-# Start development server
 bun run dev
+```
 
-# Build for production
+Then open the Vite dev server URL shown in your terminal (usually `http://localhost:5173`).
+
+### Build
+```bash
 bun run build
 ```
 
-### Project Structure
-```
-src/
-├── components/          # React components
-│   ├── ui/             # shadcn/ui components
-│   ├── MainLayout.tsx  # Main application layout
-│   └── PromptEditor.tsx # CodeMirror-based editor
-├── stores/             # Zustand state stores
-│   └── editorStore.ts  # Main editor state
-├── types/              # TypeScript type definitions
-│   └── index.ts        # Core data models
-├── utils/              # Utility functions
-│   └── syntaxParser.ts # Control syntax parser
-└── lib/                # Library utilities
-    └── utils.ts        # shadcn/ui utilities
+### Preview Production Build
+```bash
+bun run preview
 ```
 
-## 📋 Next Steps (Phase 2)
+### Test
+```bash
+bun run test
+```
 
-- [ ] Implement drag-and-drop for structural elements
-- [ ] Add/remove/toggle structural elements functionality
-- [ ] Generate UI controls from parsed syntax
-- [ ] Real-time preview updates
-- [ ] Project browser and data persistence
-- [ ] Import/export functionality
+### Lint
+```bash
+bun run lint
+```
 
-## 🎨 UI Preview
+---
 
-The application features a clean, three-panel layout:
-- **Left Panel**: Structure management (drag-and-drop elements)
-- **Center Panel**: CodeMirror-based prompt editor
-- **Right Panel**: Live preview of rendered prompt
+## Project Structure
 
-## 🔧 Technical Details
+The main application lives in `Project-prompter/`.
 
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **UI Components**: shadcn/ui (Radix UI + Tailwind CSS)
-- **State Management**: Zustand
-- **Code Editor**: CodeMirror 6
-- **Drag & Drop**: dnd-kit (ready for implementation)
-- **Routing**: React Router (ready for implementation)
+```text
+Project-prompter/
+  src/
+    components/           # UI components and feature modules
+    services/             # Google auth, sync, notifications, shortcuts
+    stores/               # Zustand store(s)
+    utils/                # parsing, import analysis, preview mapping
+    test/                 # Vitest tests and setup
+    App.tsx               # App shell and routing
+    main.tsx              # Vite entry
+  public/                 # PWA assets, manifest, icons
+  tailwind.config.js
+  vite.config.ts
+  vitest.config.ts
+  package.json
+  bun.lock
+```
 
-Built with ❤️ for the AI community.
+Notable components to explore:
+- `components/PromptEditor.tsx` — core authoring surface
+- `components/ProjectBrowser.tsx` — project-level organization
+- `components/MiniStructureEditor.tsx` — compact structure manipulation
+- `components/ExportOptionsModal.tsx` — export/share workflows
+- `components/EnhancedSearchBar.tsx` and `components/AdvancedSearch.tsx` — discovery and navigation
+
+---
+
+## PWA & Offline
+- Fully installable PWA via `vite-plugin-pwa`
+- Offline support for core flows
+- Update flow handled via a lightweight in-app prompt
+
+---
+
+## Deployment
+
+This project is configured to deploy static builds (e.g., GitHub Pages):
+
+```bash
+# from Project-prompter/
+bun run build
+bun run deploy
+```
+
+The public build is available here: `https://vfxturjo.github.io/PromptStruct/`.
+
+---
+
+## Contributing
+
+Contributions are welcome! To propose an improvement:
+- Open an issue describing the change, or
+- Submit a PR with a clear description and screenshots if UI-related.
+
+Please run `bun run lint` and `bun run test` before opening a PR.
+
+---
+
+## License
+
+Unless otherwise stated in the repository, this project is released under the MIT License. See `LICENSE` if present.
+
+
