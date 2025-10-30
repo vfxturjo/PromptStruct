@@ -343,6 +343,29 @@ export function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps) {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div>
+                                    <Label>Check for Updates</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Manually check for a newer app version
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    onClick={async () => {
+                                        const fn = (window as any).__checkForUpdates as undefined | (() => Promise<void>);
+                                        if (fn) {
+                                            await fn();
+                                        } else {
+                                            NotificationService.info('No update mechanism available');
+                                        }
+                                    }}
+                                >
+                                    <RefreshCw className="w-4 h-4 mr-2" />
+                                    Check for updates
+                                </Button>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div>
                                     <Label>Export Settings</Label>
                                     <p className="text-sm text-muted-foreground">
                                         Export your current settings to a file

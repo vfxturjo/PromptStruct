@@ -10,7 +10,7 @@ import { NotificationService } from '@/services/notificationService';
 import { useKeyboardShortcuts, CommonShortcuts } from '@/services/keyboardShortcuts';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
-import { Save, Download, Copy, HelpCircle, ChevronRight, Plus, Eye, EyeOff } from 'lucide-react';
+import { Save, Download, Copy, Plus } from 'lucide-react';
 import { TopBar } from './TopBar';
 import { ExportOptionsModal } from './ExportOptionsModal';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -312,22 +312,6 @@ export function MainLayout() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setEditorPanels({ showStructure: !editorPanels.showStructure })}
-                            title={editorPanels.showStructure ? "Hide Structure Panel" : "Show Structure Panel"}
-                        >
-                            {editorPanels.showStructure ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditorPanels({ showHelp: !editorPanels.showHelp })}
-                            title={editorPanels.showHelp ? "Hide Help Panel" : "Show Help Panel"}
-                        >
-                            <HelpCircle className="w-4 h-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
                             onClick={handleSave}
                             title="Save"
                         >
@@ -349,6 +333,7 @@ export function MainLayout() {
             <div className="flex-1 overflow-hidden">
                 <ResizablePanelGroup ref={panelGroupRef} direction="horizontal" autoSaveId="editor-layout" onLayout={(sizes) => {
                     if (sizes[0] < 8 && editorPanels.showStructure) setEditorPanels({ showStructure: false });
+                    if (sizes[1] < 8 && editorPanels.showPreview) setEditorPanels({ showPreview: false });
                     if (sizes[2] < 8 && editorPanels.showHelp) setEditorPanels({ showHelp: false });
                 }}>
                     {/* Structure Panel */}
@@ -416,7 +401,7 @@ export function MainLayout() {
                     <ResizableHandle withHandle />
 
                     {/* Preview Panel */}
-                    <ResizablePanel defaultSize={editorPanels.showHelp ? 50 : 70} minSize={20}>
+                    <ResizablePanel defaultSize={editorPanels.showHelp ? 50 : 70} minSize={20} collapsible onCollapse={() => setEditorPanels({ showPreview: false })} onExpand={() => setEditorPanels({ showPreview: true })}>
                         <div className="h-full panel-padding flex flex-col">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-lg font-semibold">
@@ -494,13 +479,6 @@ export function MainLayout() {
                                 <h3 className="text-lg font-semibold">
                                     Help
                                 </h3>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setEditorPanels({ showHelp: false })}
-                                >
-                                    <ChevronRight className="w-4 h-4" />
-                                </Button>
                             </div>
                             <div className="space-y-4">
                                 <div>
