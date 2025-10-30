@@ -170,9 +170,22 @@ export function MainLayout() {
                     version: 'current'
                 };
                 filename = `${currentPrompt?.name || 'untitled'}_current.json`;
+            } else if (options.scope === 'last') {
+                // Export last saved version (most recent non-autosave)
+                const allVersions = versions.filter(v => v.promptId === currentPrompt?.id && !v.isAutoSave);
+                const lastVersion = allVersions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                
+                exportData = {
+                    prompt: currentPrompt,
+                    versions: lastVersion ? [lastVersion] : [],
+                    currentStructure: structure,
+                    exportedAt: new Date().toISOString(),
+                    version: 'last'
+                };
+                filename = `${currentPrompt?.name || 'untitled'}_last_version.json`;
             } else {
-                // Export all versions
-                const promptVersions = versions.filter(v => v.promptId === currentPrompt?.id);
+                // Export all versions (excluding autosaves)
+                const promptVersions = versions.filter(v => v.promptId === currentPrompt?.id && !v.isAutoSave);
                 exportData = {
                     prompt: currentPrompt,
                     versions: promptVersions,

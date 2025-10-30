@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, FileText, FolderOpen } from 'lucide-react';
+import { Download, FileText, FolderOpen, Clock } from 'lucide-react';
 import { Project, Prompt, Version } from '@/types';
 
 interface ExportOptionsModalProps {
@@ -18,7 +18,7 @@ interface ExportOptionsModalProps {
 }
 
 interface ExportOptions {
-    scope: 'current' | 'all';
+    scope: 'current' | 'last' | 'all';
     format: 'json';
     includeMetadata: boolean;
 }
@@ -72,20 +72,30 @@ export function ExportOptionsModal({
     const getScopeOptions = () => {
         switch (exportType) {
             case 'prompt':
-                return [
-                    {
-                        value: 'current',
-                        label: 'Current version only',
-                        description: 'Export only the current structure state',
-                        icon: <FileText className="w-4 h-4" />
-                    },
-                    {
-                        value: 'all',
-                        label: 'All versions',
-                        description: `Export all ${versions.length} versions of this prompt`,
-                        icon: <FileText className="w-4 h-4" />
-                    }
-                ];
+                {
+                    // Count non-autosave versions
+                    const manualVersions = versions.filter(v => !v.isAutoSave);
+                    return [
+                        {
+                            value: 'current',
+                            label: 'Current version only',
+                            description: 'Export only the current structure state',
+                            icon: <FileText className="w-4 h-4" />
+                        },
+                        {
+                            value: 'last',
+                            label: 'Last saved version',
+                            description: `Export the most recent manual save (${manualVersions.length} version${manualVersions.length !== 1 ? 's' : ''} available)`,
+                            icon: <Clock className="w-4 h-4" />
+                        },
+                        {
+                            value: 'all',
+                            label: 'All versions',
+                            description: `Export all ${manualVersions.length} manual versions (autosaves excluded)`,
+                            icon: <FileText className="w-4 h-4" />
+                        }
+                    ];
+                }
             case 'project':
                 return [
                     {
@@ -95,9 +105,15 @@ export function ExportOptionsModal({
                         icon: <FolderOpen className="w-4 h-4" />
                     },
                     {
+                        value: 'last',
+                        label: 'Project with last version of each prompt',
+                        description: 'Export project with the most recent manual save of each prompt',
+                        icon: <Clock className="w-4 h-4" />
+                    },
+                    {
                         value: 'all',
-                        label: 'Project with all prompts',
-                        description: 'Export project with all prompts and their versions',
+                        label: 'Project with all versions',
+                        description: 'Export project with all manual versions (autosaves excluded)',
                         icon: <FolderOpen className="w-4 h-4" />
                     }
                 ];
@@ -136,7 +152,7 @@ export function ExportOptionsModal({
                         <Label className="text-sm font-medium">Export Scope</Label>
                         <RadioGroup
                             value={options.scope}
-                            onValueChange={(value: string) => setOptions(prev => ({ ...prev, scope: value as 'current' | 'all' }))}
+                            onValueChange={(value: string) => setOptions(prev => ({ ...prev, scope: value as 'current' | 'last' | 'all' }))}
                         >
                             {scopeOptions.map((option) => (
                                 <div key={option.value} className="flex items-start space-x-3">

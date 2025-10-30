@@ -5,7 +5,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 
 export function App() {
     return (
-        <Router>
+        <Router basename="/PromptStruct/">
             <Routes>
                 <Route path="/" element={<Navigate to="/browser" replace />} />
                 <Route path="/browser" element={<ProjectBrowser />} />

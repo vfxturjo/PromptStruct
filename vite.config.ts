@@ -5,6 +5,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    base: '/PromptStruct/',
     server: {
         port: 4173,
         host: true
@@ -24,8 +25,8 @@ export default defineConfig({
                 background_color: '#0f172a',
                 display: 'standalone',
                 orientation: 'portrait',
-                scope: '/',
-                start_url: '/',
+                scope: '/PromptStruct/',
+                start_url: '/PromptStruct/',
                 icons: [
                     {
                         src: 'pwa-192x192.png',

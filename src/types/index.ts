@@ -92,7 +92,8 @@ export interface ProjectExport {
     prompts: Prompt[];
     versions: Version[];
     exportedAt: string;
-    version: 'metadata' | 'full';
+    version: 'metadata' | 'last' | 'full';
+    type?: 'single' | 'bulk';
 }
 
 export interface PromptsExport {
@@ -108,7 +109,23 @@ export interface PromptExport {
     versions?: Version[];
     currentStructure?: StructuralElement[];
     exportedAt: string;
-    version: 'current' | 'all';
+    version: 'current' | 'last' | 'all';
+}
+
+// Import types
+export interface ImportConflict {
+    id: string;
+    name: string;
+    type: 'project' | 'prompt' | 'version';
+    resolution: 'overwrite' | 'skip' | 'duplicate';
+}
+
+export interface ImportAnalysis {
+    type: 'prompt' | 'project' | 'workspace' | 'bulk-prompts' | 'bulk-projects';
+    projects: Project[];
+    prompts: Prompt[];
+    versions: Version[];
+    conflicts: ImportConflict[];
 }
 
 export interface TemplateExport {
