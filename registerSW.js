@@ -1,1 +1,1 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/promptstruct/sw.js', { scope: '/promptstruct/' })})}
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/PromptStruct/sw.js', { scope: '/PromptStruct/' })})}
